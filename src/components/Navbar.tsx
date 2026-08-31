@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { WINDOWS_DOWNLOAD_URL } from "@/lib/config";
 import { Close, Download, Logo, Menu } from "@/components/icons";
 
 const NAV_LINKS = [
@@ -92,7 +91,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href={WINDOWS_DOWNLOAD_URL}
+            href="/download"
             className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_24px_var(--accent-glow)]"
           >
             <Download className="h-4 w-4" />
@@ -144,7 +143,7 @@ export default function Navbar() {
                 className="mt-3"
               >
                 <Link
-                  href={WINDOWS_DOWNLOAD_URL}
+                  href="/download"
                   onClick={() => setOpen(false)}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-sm font-medium text-black transition-colors hover:bg-[var(--accent-strong)]"
                 >

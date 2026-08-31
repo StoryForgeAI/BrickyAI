@@ -1,6 +1,5 @@
 import ScrollReveal from "@/components/ScrollReveal";
 import { Download } from "@/components/icons";
-import { WINDOWS_DOWNLOAD_URL } from "@/lib/config";
 
 export default function CTA() {
   return (
@@ -21,7 +20,7 @@ export default function CTA() {
             </p>
             <div className="mt-8">
               <a
-                href={WINDOWS_DOWNLOAD_URL}
+                href="/download"
                 className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-black transition-all duration-200 hover:shadow-[0_0_44px_var(--accent-glow)]"
                 style={{ backgroundColor: "var(--accent)" }}
               >
