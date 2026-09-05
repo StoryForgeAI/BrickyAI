@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Session, User } from "@supabase/supabase-js";
 import { getBrowserSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { WINDOWS_DOWNLOAD_URL, PLUGIN_DOWNLOAD_URL } from "@/lib/config";
+import type { Profile } from "@/lib/profile";
 import AuthModal from "@/components/auth/AuthModal";
 
 export type AuthMode = "login" | "signup" | "forgot";
@@ -28,6 +29,8 @@ interface AuthContextValue {
   loading: boolean;
   user: User | null;
   session: Session | null;
+  /** The signed-in user's `profiles` row (read-only; credits/subscription are server-managed). */
+  profile: Profile | null;
   /** Open the auth modal (optionally in a specific mode). */
   openAuth: (options?: { mode?: AuthMode }) => void;
   /** Close the modal and cancel any deferred action stored by `requireAuth`. */
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(() => !isSupabaseConfigured);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else if (event === "SIGNED_OUT") {
         setSession(null);
         setUser(null);
+        setProfile(null);
       }
     });
 
@@ -158,6 +163,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.subscription.unsubscribe();
     };
   }, [supabase, runAction, getPending]);
+
+  // Fetch the signed-in user's read-only `profiles` row whenever the auth user
+  // changes. The browser uses its own user ID only for the SELECT (the fetch is
+  // scoped to the authenticated user), and credits/subscription remain
+  // server-managed values — the client never writes them. The profile is
+  // cleared in the sign-out handlers below, not via setState in this effect.
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (error) {
+        setProfile(null);
+      } else {
+        setProfile((data as Profile | null) ?? null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [supabase, user?.id]);
 
   const openAuth = useCallback((options?: { mode?: AuthMode }) => {
     setError(null);
@@ -178,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (supabase) await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setProfile(null);
   }, [supabase, storePending]);
 
   const requireAuth = useCallback(
@@ -205,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       user,
       session,
+      profile,
       openAuth,
       closeAuth,
       isOpen,
@@ -215,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       requireAuth,
     }),
-    [loading, user, session, openAuth, closeAuth, isOpen, mode, error, clearError, signOut, requireAuth]
+    [loading, user, session, profile, openAuth, closeAuth, isOpen, mode, error, clearError, signOut, requireAuth]
   );
 
   return (

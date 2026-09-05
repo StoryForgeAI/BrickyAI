@@ -245,8 +245,15 @@ export default function AuthModal({ open, mode, onClose, onChangeView, onAuthent
               {!configured ? (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-relaxed text-[var(--text-secondary)]">
                   Authentication isn&apos;t configured for this deployment yet.
-                  The operator needs to set up Supabase and add the public
-                  environment variables before accounts can be created.
+                  The operator needs to set up Supabase and add{" "}
+                  <code className="font-mono text-xs text-[var(--accent)]">
+                    NEXT_PUBLIC_SUPABASE_URL
+                  </code>{" "}
+                  and{" "}
+                  <code className="font-mono text-xs text-[var(--accent)]">
+                    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+                  </code>{" "}
+                  before accounts can be created.
                 </div>
               ) : (
                 <>

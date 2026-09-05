@@ -43,7 +43,7 @@ reject the sign-in.
 ## 4. Local testing
 
 - Run the site with `.env.local` containing `NEXT_PUBLIC_SUPABASE_URL` and
-  `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 - Supabase reads the redirect target from the request: the site passes
   `redirectTo` (see `AuthModal.tsx`) so the user lands back on the page they
   came from.

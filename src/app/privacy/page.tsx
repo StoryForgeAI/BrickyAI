@@ -347,8 +347,12 @@ export default function PrivacyPage() {
           <strong>Supabase</strong>, our backend infrastructure provider. This
           means your email address, account identifier, verification status,
           and session data reside within Supabase&apos;s infrastructure, which
-          is protected by its security practices. The rest of the Service uses
-          hosting and infrastructure providers located in multiple regions.
+          is protected by its security practices. The website itself is served
+          on <strong>Vercel</strong>, which processes the technical data
+          described in <a href="#sec-11">Section 11</a> (such as IP addresses
+          and request metadata) to deliver and protect the site. The rest of
+          the Service uses hosting and infrastructure providers located in
+          multiple regions.
         </p>
       </LegalSection>
 

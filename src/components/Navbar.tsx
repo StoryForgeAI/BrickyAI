@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { deleteAccount } from "@/lib/account";
+import { subscriptionLabel, creditsLabel } from "@/lib/profile";
 import { Close, Download, Logo, Menu, Spinner, User } from "@/components/icons";
 
 const NAV_LINKS = [
@@ -25,7 +26,7 @@ function shortEmail(email: string) {
 }
 
 function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
-  const { user, session, loading, signOut, configured, requireAuth } = useAuth();
+  const { user, session, loading, signOut, configured, requireAuth, profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -115,13 +116,34 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
                 {user.email}
               </p>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                {user.email_confirmed_at
+                {(profile?.email_verified ?? false) || user.email_confirmed_at
                   ? "Email verified"
                   : "Email not verified yet"}
               </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                    Subscription
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-primary)]">
+                    {subscriptionLabel(profile)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                    Credits
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-primary)]">
+                    {creditsLabel(profile)}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="p-2">
+              <p className="px-3 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                Account
+              </p>
               {confirmingDelete ? (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
                   <p className="text-xs leading-relaxed text-red-300">

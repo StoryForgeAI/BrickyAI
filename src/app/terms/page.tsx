@@ -507,12 +507,13 @@ export default function TermsPage() {
       </LegalSection>
 
       <LegalSection id="sec-24" num="24" title="Third-party services">
-        <p>
+<p>
           The Service relies on and integrates with third-party services and
-          platforms, including Roblox Studio, authentication providers, and
-          hosting and infrastructure providers. These third parties have their
-          own terms and privacy policies, which may change without notice to
-          us. We are not responsible for those third-party services.
+          platforms, including Roblox Studio, authentication providers, Vercel
+          (the hosting platform that serves this website), and other hosting
+          and infrastructure providers. These third parties have their own
+          terms and privacy policies, which may change without notice to us. We
+          are not responsible for those third-party services.
         </p>
       </LegalSection>
 
