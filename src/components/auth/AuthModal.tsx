@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { AuthError } from "@supabase/supabase-js";
 import { getBrowserSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { authRedirectTo } from "@/lib/oauth";
 import { Close, GoogleG, Logo, Spinner } from "@/components/icons";
 
 type View = "login" | "signup" | "forgot";
@@ -109,7 +110,10 @@ export default function AuthModal({ open, mode, onClose, onChangeView, onAuthent
     setLocalError(null);
     setSuccess(null);
     try {
-      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      // Dynamic redirect target: NEXT_PUBLIC_SITE_URL in production, the
+      // current page origin otherwise (keeps localhost + previews working).
+      // Never a hardcoded localhost URL.
+      const redirectTo = authRedirectTo(window.location.pathname);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
@@ -157,7 +161,7 @@ export default function AuthModal({ open, mode, onClose, onChangeView, onAuthent
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: authRedirectTo("/"),
           },
         });
         if (error) {
@@ -172,7 +176,7 @@ export default function AuthModal({ open, mode, onClose, onChangeView, onAuthent
         }
       } else if (view === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: `${window.location.origin}/auth/update-password`,
+          redirectTo: authRedirectTo("/auth/update-password"),
         });
         if (error) {
           // Do not reveal whether an account exists; show a generic confirmation.

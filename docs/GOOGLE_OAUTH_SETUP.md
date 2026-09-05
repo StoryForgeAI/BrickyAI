@@ -1,10 +1,15 @@
 # Google OAuth / "Continue with Google" setup
 
 Bricky AI signs users in through Supabase Auth. To offer "Continue with
-Google" you need to enable the Google provider in Suapbase **and** create the
+Google" you need to enable the Google provider in Supabase **and** create the
 matching OAuth client in the Google Cloud Console. Both must agree on the
 redirect URL and the site domain, otherwise Google (and/or Supabase) will
 reject the sign-in.
+
+The site never hardcodes a redirect origin. It builds the post-auth redirect
+from `NEXT_PUBLIC_SITE_URL` when set (production), otherwise from the current
+page origin (`window.location.origin`), which keeps `localhost` working for
+local development and Vercel preview URLs working automatically.
 
 ## 1. Supabase side
 
@@ -40,7 +45,25 @@ reject the sign-in.
    **Client secret**.
 2. Save. The Google provider is now live.
 
-## 4. Local testing
+## 4. Production redirect configuration
+
+To make login return to the Bricky AI production domain (never a leftover
+`localhost:3000` from development):
+
+1. In Vercel (**Project → Settings → Environment Variables**) set
+   `NEXT_PUBLIC_SITE_URL` to your deployed domain, e.g. `https://brickyai.com`,
+   scoped to the **Production** environment. Leave it unset for Local/Preview
+   so those use the current origin.
+2. In Vercel, also set `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and server-only `SUPABASE_SECRET_KEY`.
+3. In Supabase → **Authentication → URL Configuration**, make sure the
+   **Site URL** is the production domain (e.g. `https://brickyai.com`) and the
+   **Redirect URLs** list includes it. A stale `http://localhost:3000` Site URL
+   is the classic cause of production logins rebounding to localhost when
+   `redirectTo` is ever missing.
+4. Redeploy the site after changing environment variables.
+
+## 5. Local testing
 
 - Run the site with `.env.local` containing `NEXT_PUBLIC_SUPABASE_URL` and
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
@@ -50,8 +73,13 @@ reject the sign-in.
 - Make sure `http://localhost:3000` is in the Google client's authorized
   origins and that you are listed as a test user (or the app is published).
 
-## 5. Common problems
+## 6. Common problems
 
+- **Login always lands on `http://localhost:3000` in production** → the login
+  was started from a localhost origin, or Supabase's **Site URL** /
+  **Redirect URLs** still contain `http://localhost:3000`. Set
+  `NEXT_PUBLIC_SITE_URL` to the production domain in Vercel and fix the
+  Supabase URL Configuration (see [section 4](#4-production-redirect-configuration)).
 - **`redirect_uri_mismatch`** → the Supabase callback URL in Google does not
   exactly match the one Supabase shows.
 - **`access blocked`** → the OAuth consent screen is not published, or your

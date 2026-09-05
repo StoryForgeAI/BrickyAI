@@ -7,6 +7,20 @@ export const siteConfig = {
 };
 
 /**
+ * Canonical site origin used for OAuth redirect targets.
+ *
+ * Production behaviour: set `NEXT_PUBLIC_SITE_URL` to the deployed Bricky AI
+ * domain (e.g. `https://brickyai.com`) in the Vercel production environment so
+ * Google OAuth deterministically returns to the production origin.
+ *
+ * Local development / previews: when the variable is unset, the origin of the
+ * current page (`window.location.origin`) is used, so localhost keeps working.
+ *
+ * Never include a hardcoded localhost URL here — it must stay dynamic.
+ */
+export const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL ?? siteConfig.url;
+
+/**
  * Centralized download configuration.
  *
  * Defaults are placeholders ("#") on purpose — the actual installer and plugin
