@@ -163,3 +163,79 @@ body {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------
+   Legal documents (Terms / Privacy)
+   Readability-first typography. No animations on legal text.
+---------------------------------------------------------------- */
+.prose-legal {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.prose-legal > p {
+  margin: 0 0 1rem;
+}
+
+.prose-legal > p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-legal a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.prose-legal a:hover {
+  color: var(--accent-strong);
+}
+
+.prose-legal h3 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prose-legal ul,
+.prose-legal ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.prose-legal ul {
+  list-style: disc;
+}
+
+.prose-legal ol {
+  list-style: decimal;
+}
+
+.prose-legal li::marker {
+  color: var(--accent);
+}
+
+.prose-legal strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.prose-legal .legal-callout {
+  margin: 1.25rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  padding: 1rem 1.25rem;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (min-width: 640px) {
+  .prose-legal {
+    font-size: 15.5px;
+  }
+}

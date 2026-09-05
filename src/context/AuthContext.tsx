@@ -20,11 +20,6 @@ export type AuthPendingAction =
   | { type: "download-plugin" };
 
 const PENDING_STORAGE_KEY = "bricky-auth-pending";
-const modeName: Record<AuthMode, string> = {
-  login: "Log in",
-  signup: "Create account",
-  forgot: "Reset password",
-};
 
 interface AuthContextValue {
   /** Whether Supabase environment variables are configured for this deployment. */
@@ -35,6 +30,7 @@ interface AuthContextValue {
   session: Session | null;
   /** Open the auth modal (optionally in a specific mode). */
   openAuth: (options?: { mode?: AuthMode }) => void;
+  /** Close the modal and cancel any deferred action stored by `requireAuth`. */
   closeAuth: () => void;
   isOpen: boolean;
   mode: AuthMode;
@@ -67,20 +63,24 @@ function readStoredPending(): AuthPendingAction | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  // When Supabase isn't configured there is nothing to restore, so loading is
+  // false from the start.
+  const [loading, setLoading] = useState(() => !isSupabaseConfigured);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<AuthPendingAction | null>(null);
   const pendingRef = useRef<AuthPendingAction | null>(null);
 
   const supabase = isSupabaseConfigured ? getBrowserSupabaseClient() : null;
 
+  const getPending = useCallback((): AuthPendingAction | null => {
+    return pendingRef.current ?? readStoredPending();
+  }, []);
+
   const storePending = useCallback((action: AuthPendingAction | null) => {
     pendingRef.current = action;
-    setPending(action);
     try {
       if (action) sessionStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(action));
       else sessionStorage.removeItem(PENDING_STORAGE_KEY);
@@ -109,18 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router, storePending]
   );
 
-  /** Restore a pending action stored before a Google OAuth round-trip. */
   useEffect(() => {
-    const stored = readStoredPending();
-    if (stored) storePending(stored);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+    if (!supabase) return;
 
     let active = true;
 
@@ -134,9 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Detect a failed OAuth redirect (e.g. the user cancelled at Google).
       const params = new URLSearchParams(window.location.search);
       if (params.get("error")) {
-        setError(
-          "Google sign-in was cancelled or could not be completed. Please try again."
-        );
+        setError("Google sign-in was cancelled or could not be completed. Please try again.");
         setIsOpen(true);
         window.history.replaceState({}, "", window.location.pathname);
       }
@@ -145,40 +133,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void restore();
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, changedSession) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+      if (event === "INITIAL_SESSION") {
         setSession(changedSession);
         setUser(changedSession?.user ?? null);
-        if (event === "SIGNED_IN") {
-          const stored = pendingRef.current ?? readStoredPending();
+        setLoading(false);
+        // After a Google OAuth round-trip the library swaps the PKCE code for a
+        // session on this page load and emits INITIAL_SESSION. Run a deferred
+        // action that was set before the redirect (e.g. "download this file").
+        if (changedSession) {
+          const stored = getPending();
           if (stored) runAction(stored);
         }
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        setSession(changedSession);
+        setUser(changedSession?.user ?? null);
       } else if (event === "SIGNED_OUT") {
         setSession(null);
         setUser(null);
-        storePending(null);
       }
-      setLoading(false);
     });
 
     return () => {
       active = false;
       subscription.subscription.unsubscribe();
     };
-  }, [supabase, runAction, storePending]);
+  }, [supabase, runAction, getPending]);
 
-  const openAuth = useCallback(
-    (options?: { mode?: AuthMode }) => {
-      setError(null);
-      if (options?.mode) setMode(options.mode);
-      setIsOpen(true);
-    },
-    []
-  );
+  const openAuth = useCallback((options?: { mode?: AuthMode }) => {
+    setError(null);
+    setMode(options?.mode ?? "login");
+    setIsOpen(true);
+  }, []);
 
   const closeAuth = useCallback(() => {
     setIsOpen(false);
     setError(null);
-  }, []);
+    storePending(null);
+  }, [storePending]);
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -200,6 +191,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [user, runAction, storePending, openAuth]
   );
+
+  /** Called by the modal once a same-page login/signup succeeds. */
+  const finishAuth = useCallback(() => {
+    const stored = getPending();
+    if (stored) runAction(stored);
+    closeAuth();
+  }, [getPending, runAction, closeAuth]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -228,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mode={mode}
         onClose={closeAuth}
         onChangeView={setMode}
+        onAuthenticated={finishAuth}
         error={error}
         onClearError={clearError}
       />
@@ -240,5 +239,3 @@ export function useAuth(): AuthContextValue {
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 }
-
-export { modeName };

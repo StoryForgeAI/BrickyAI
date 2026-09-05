@@ -1,20 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 /**
  * Small auth-aware line for the download page hero. Renders a neutral
- * placeholder until the persisted session is restored so server and client
- * markup always match.
+ * placeholder while the persisted session is being restored so server and
+ * first client render always match (no hydration mismatch).
  */
 export default function DownloadAuthStatus() {
   const { user, loading, configured } = useAuth();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted || loading || !configured) {
+  if (loading || !configured) {
     return (
       <span className="inline-flex h-4 items-center">
         <span className="h-3 w-px bg-[var(--border-strong)]" aria-hidden />

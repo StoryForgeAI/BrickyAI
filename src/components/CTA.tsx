@@ -1,7 +1,11 @@
+"use client";
+
 import ScrollReveal from "@/components/ScrollReveal";
 import { Download } from "@/components/icons";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CTA() {
+  const { requireAuth } = useAuth();
   return (
     <section className="relative py-24 sm:py-28">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
@@ -19,14 +23,15 @@ export default function CTA() {
               Roblox Studio.
             </p>
             <div className="mt-8">
-              <a
-                href="/download"
+              <button
+                type="button"
+                onClick={() => requireAuth({ type: "navigate-download" })}
                 className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-black transition-all duration-200 hover:shadow-[0_0_44px_var(--accent-glow)]"
                 style={{ backgroundColor: "var(--accent)" }}
               >
                 <Download className="h-5 w-5" />
                 Download Bricky AI
-              </a>
+              </button>
             </div>
             <div className="mt-5 text-xs text-[var(--text-muted)]">Windows 10 / 11</div>
           </div>

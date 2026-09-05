@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
+import { companyInfo, hasCompleteCompanyInfo } from "@/lib/company";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -16,6 +17,20 @@ export default function Footer() {
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-6 text-[var(--text-secondary)]">
               AI-powered Roblox Studio plugin development.
+            </p>
+            <p className="mt-4 text-xs leading-5 text-[var(--text-muted)]">
+              Operated by{" "}
+              <span className="text-[var(--text-secondary)]">
+                {companyInfo.operatorName}
+              </span>
+              {!hasCompleteCompanyInfo && (
+                <span
+                  className="ml-2 inline-block cursor-help rounded-full border border-[var(--accent-border)] bg-[var(--accent-dim)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--accent)]"
+                  title="Company details are placeholders that the operator needs to complete."
+                >
+                  Pending
+                </span>
+              )}
             </p>
           </div>
 
@@ -73,7 +88,28 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-6 text-xs text-[var(--text-muted)] sm:flex-row">
+        <div className="mt-12 space-y-3 border-t border-[var(--border-subtle)] pt-6 text-xs leading-5 text-[var(--text-muted)]">
+          <address className="not-italic">
+            <span className="font-semibold text-[var(--text-secondary)]">
+              {companyInfo.operatorName}
+            </span>{" "}
+            · Registered in {companyInfo.operatorCountry} · Official registered
+            address:{" "}
+            <span className="font-mono text-[11px]">{companyInfo.legalAddress}</span>{" "}
+            · Company registration number:{" "}
+            <span className="font-mono text-[11px]">{companyInfo.registrationNumber}</span>{" "}
+            · Tax/VAT:{" "}
+            <span className="font-mono text-[11px]">{companyInfo.taxNumber}</span>{" "}
+            · Registry:{" "}
+            <span className="font-mono text-[11px]">{companyInfo.registryDetails}</span>
+          </address>
+          <p>
+            Legal / privacy contact:{" "}
+            <span className="font-mono text-[11px]">{companyInfo.contactEmail}</span>
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-6 text-xs text-[var(--text-muted)] sm:flex-row">
           <p>© {currentYear} Bricky AI. All rights reserved.</p>
           <p>Bricky AI is an independent project and is not affiliated with Roblox Corporation.</p>
         </div>

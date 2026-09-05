@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Logo, Spinner } from "@/components/icons";
@@ -9,20 +8,19 @@ import { Logo, Spinner } from "@/components/icons";
 type Status = "waiting" | "ready" | "saving" | "success" | "invalid" | "error";
 
 export default function UpdatePasswordPage() {
-  const router = useRouter();
-  const [status, setStatus] = useState<Status>("waiting");
+  const [status, setStatus] = useState<Status>(() =>
+    getBrowserSupabaseClient() ? "waiting" : "invalid"
+  );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(() =>
+    getBrowserSupabaseClient() ? null : "Authentication isn't configured for this deployment yet."
+  );
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const supabase = getBrowserSupabaseClient();
-    if (!supabase) {
-      setStatus("invalid");
-      setMessage("Authentication isn't configured for this deployment yet.");
-      return;
-    }
+    if (!supabase) return;
 
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "PASSWORD_RECOVERY" || (event === "INITIAL_SESSION" && session)) {

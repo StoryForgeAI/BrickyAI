@@ -14,6 +14,7 @@ interface AuthModalProps {
   mode: View;
   onClose: () => void;
   onChangeView: (view: View) => void;
+  onAuthenticated: () => void;
   error: string | null;
   onClearError: () => void;
 }
@@ -42,7 +43,7 @@ function friendlyAuthError(err: AuthError | null): string {
   return "Something went wrong. Please try again.";
 }
 
-export default function AuthModal({ open, mode, onClose, onChangeView, error, onClearError }: AuthModalProps) {
+export default function AuthModal({ open, mode, onClose, onChangeView, onAuthenticated, error, onClearError }: AuthModalProps) {
   const reduce = useReducedMotion();
   const configured = isSupabaseConfigured;
 
@@ -54,17 +55,30 @@ export default function AuthModal({ open, mode, onClose, onChangeView, error, on
   const [success, setSuccess] = useState<string | null>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  const [prevMode, setPrevMode] = useState<View>(mode);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  // Keep internal view + transient messages in sync with the parent-provided
+  // mode/open (rendered-state adjustment, not an effect — see React docs).
+  if (prevMode !== mode && (mode === "login" || mode === "signup" || mode === "forgot")) {
+    setPrevMode(mode);
+    setView(mode);
+  }
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      setLocalError(null);
+      setSuccess(null);
+    }
+  }
+
   const err = localError ?? error;
 
   useEffect(() => {
-    if (open) {
-      setView(mode === "forgot" ? "forgot" : mode === "signup" ? "signup" : "login");
-      setLocalError(null);
-      setSuccess(null);
-      const t = setTimeout(() => emailInputRef.current?.focus(), 250);
-      return () => clearTimeout(t);
-    }
-  }, [open, mode]);
+    if (!open) return;
+    const t = setTimeout(() => emailInputRef.current?.focus(), 250);
+    return () => clearTimeout(t);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -98,7 +112,7 @@ export default function AuthModal({ open, mode, onClose, onChangeView, error, on
       const redirectTo = `${window.location.origin}${window.location.pathname}`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo, flowType: "pkce" },
+        options: { redirectTo },
       });
       if (error) {
         setLocalError(friendlyAuthError(error));
@@ -136,7 +150,7 @@ export default function AuthModal({ open, mode, onClose, onChangeView, error, on
         if (error) {
           setLocalError(friendlyAuthError(error));
         } else {
-          onClose();
+          onAuthenticated();
         }
       } else if (view === "signup") {
         const { data, error } = await supabase.auth.signUp({
@@ -150,7 +164,7 @@ export default function AuthModal({ open, mode, onClose, onChangeView, error, on
           setLocalError(friendlyAuthError(error));
         } else if (data.session) {
           // Email confirmation is disabled for this project — signed in directly.
-          onClose();
+          onAuthenticated();
         } else {
           setSuccess(
             "Check your inbox to confirm your email. We'll continue as soon as your account is verified."
