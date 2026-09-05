@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { useAuth } from "@/context/AuthContext";
+import type { AuthPendingAction } from "@/context/AuthContext";
 import { Windows, Plug, Download } from "@/components/icons";
 import { WINDOWS_DOWNLOAD_URL, PLUGIN_DOWNLOAD_URL } from "@/lib/config";
 
@@ -33,10 +35,26 @@ interface DownloadCardProps {
   note: string;
   href: string;
   accent?: boolean;
+  /** Deferred action to run once the user authenticates (when logged out). */
+  pendingAction: AuthPendingAction;
 }
 
-function Card({ icon, badge, title, description, meta, fileLabel, note, href, accent }: DownloadCardProps) {
+function Card({ icon, badge, title, description, meta, fileLabel, note, href, accent, pendingAction }: DownloadCardProps) {
   const reduce = useReducedMotion();
+  const { user, configured, requireAuth } = useAuth();
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // When authentication is configured and the user is signed out, require
+    // sign-in before the download starts.
+    if (configured && !user) {
+      e.preventDefault();
+      e.stopPropagation();
+      requireAuth(pendingAction);
+    }
+  };
+
+  const needsAuth = configured && !user;
+
   return (
     <motion.article
       whileHover={reduce ? undefined : { y: -4 }}
@@ -69,6 +87,7 @@ function Card({ icon, badge, title, description, meta, fileLabel, note, href, ac
         <div className="mt-6">
           <a
             href={href}
+            onClick={handleClick}
             className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-3.5 text-[15px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
               accent
                 ? "bg-[var(--accent)] text-black hover:bg-[var(--accent-strong)] hover:shadow-[0_0_40px_var(--accent-glow)]"
@@ -76,11 +95,13 @@ function Card({ icon, badge, title, description, meta, fileLabel, note, href, ac
             }`}
           >
             <AnimatedDownloadIcon />
-            {fileLabel}
+            {needsAuth ? "Sign in to download" : fileLabel}
           </a>
         </div>
 
-        <p className="mt-3 text-center text-xs text-[var(--text-muted)]">{note}</p>
+        <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
+          {needsAuth ? "Sign in with Google or email to continue." : note}
+        </p>
       </div>
     </motion.article>
   );
@@ -107,6 +128,7 @@ export default function DownloadCards() {
         fileLabel="Download for Windows"
         note="Windows installer"
         href={WINDOWS_DOWNLOAD_URL}
+        pendingAction={{ type: "download-windows" }}
         accent
       />
 
@@ -123,6 +145,7 @@ export default function DownloadCards() {
         fileLabel="Download Plugin"
         note="Roblox Studio plugin"
         href={PLUGIN_DOWNLOAD_URL}
+        pendingAction={{ type: "download-plugin" }}
       />
     </div>
   );

@@ -3,8 +3,10 @@
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Close, Download, Logo, Menu } from "@/components/icons";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { deleteAccount } from "@/lib/account";
+import { Close, Download, Logo, Menu, Spinner, User } from "@/components/icons";
 
 const NAV_LINKS = [
   { label: "Product", href: "/#product" },
@@ -15,11 +17,181 @@ const NAV_LINKS = [
 
 const SECTION_IDS = ["product", "features", "how-it-works", "faq"];
 
+function shortEmail(email: string) {
+  const [name, domain] = email.split("@");
+  if (!domain) return email;
+  const trimmed = name.length > 14 ? `${name.slice(0, 12)}…` : name;
+  return `${trimmed}@${domain}`;
+}
+
+function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
+  const { user, session, loading, signOut, configured, requireAuth } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClick);
+    };
+  }, [open]);
+
+  if (loading) {
+    return (
+      <button
+        type="button"
+        className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm text-[var(--text-secondary)]"
+        aria-label="Loading account"
+      >
+        <Spinner className="h-4 w-4 animate-spin" />
+      </button>
+    );
+  }
+
+  if (!user) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          requireAuth({ type: "navigate-download" });
+          onNavigate();
+        }}
+        className="inline-flex h-10 items-center rounded-full border border-[var(--border-strong)] px-5 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
+      >
+        Log in
+      </button>
+    );
+  }
+
+  const handleDelete = async () => {
+    if (!configured || !session) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteAccount(session.access_token);
+    setDeleting(false);
+    if (result.ok) {
+      setOpen(false);
+      void signOut();
+    } else {
+      setDeleteError(result.error);
+    }
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="inline-flex h-10 max-w-[220px] items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-raised)] px-3 text-sm text-[var(--text-primary)] transition-colors hover:border-[var(--accent-border)]"
+      >
+        <User className="h-4 w-4 text-[var(--accent)]" />
+        <span className="truncate">{shortEmail(user.email ?? "Account")}</span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.16 }}
+            className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] shadow-2xl"
+          >
+            <div className="border-b border-[var(--border-subtle)] px-4 py-3">
+              <p className="truncate text-sm font-medium text-[var(--text-primary)]">
+                {user.email}
+              </p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                {user.email_confirmed_at
+                  ? "Email verified"
+                  : "Email not verified yet"}
+              </p>
+            </div>
+
+            <div className="p-2">
+              {confirmingDelete ? (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
+                  <p className="text-xs leading-relaxed text-red-300">
+                    This permanently deletes your account and associated personal
+                    data (some records may be retained where legally required).
+                    This cannot be undone.
+                  </p>
+                  {deleteError && (
+                    <p className="mt-2 text-xs text-red-300">{deleteError}</p>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      disabled={deleting}
+                      onClick={handleDelete}
+                      className="inline-flex flex-1 items-center justify-center rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+                    >
+                      {deleting ? "Deleting…" : "Delete account"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      className="inline-flex flex-1 items-center justify-center rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void signOut();
+                      setOpen(false);
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
+                  >
+                    Sign out
+                  </button>
+                  {configured && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                    >
+                      Delete account
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("");
+  const { requireAuth } = useAuth();
+
+  const handleDownload = () => {
+    setOpen(false);
+    requireAuth({ type: "navigate-download" });
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -90,13 +262,15 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/download"
+          <AccountMenu onNavigate={() => setOpen(false)} />
+          <button
+            type="button"
+            onClick={handleDownload}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_24px_var(--accent-glow)]"
           >
             <Download className="h-4 w-4" />
             Download
-          </Link>
+          </button>
         </div>
 
         <button
@@ -140,16 +314,19 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="mt-3"
+                className="mt-3 flex flex-col gap-2"
               >
-                <Link
-                  href="/download"
-                  onClick={() => setOpen(false)}
+                <button
+                  type="button"
+                  onClick={handleDownload}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-sm font-medium text-black transition-colors hover:bg-[var(--accent-strong)]"
                 >
                   <Download className="h-4 w-4" />
                   Download Bricky AI
-                </Link>
+                </button>
+                <div className="rounded-xl border border-[var(--border)] p-2">
+                  <AccountMenu onNavigate={() => setOpen(false)} />
+                </div>
               </motion.div>
             </div>
           </motion.div>

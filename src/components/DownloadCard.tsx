@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { useAuth } from "@/context/AuthContext";
 import { Windows, Download } from "@/components/icons";
 import { WINDOWS_DOWNLOAD_URL } from "@/lib/config";
 
@@ -18,6 +19,17 @@ export default function DownloadCard({
   meta = "Windows 10 / 11",
 }: DownloadCardProps) {
   const reduce = useReducedMotion();
+  const { user, configured, requireAuth } = useAuth();
+  const needsAuth = configured && !user;
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (configured && !user) {
+      e.preventDefault();
+      e.stopPropagation();
+      requireAuth({ type: "download-windows" });
+    }
+  };
+
   const osForms = {
     windows: {
       icon: <Windows className="h-7 w-7" />,
@@ -43,11 +55,12 @@ export default function DownloadCard({
 
         <a
           href={WINDOWS_DOWNLOAD_URL}
+          onClick={handleClick}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-[15px] font-semibold text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_40px_var(--accent-glow)] sm:w-auto"
           style={{ minHeight: "3.25rem" }}
         >
           <Download className="h-5 w-5" />
-          {form.downloadLabel}
+          {needsAuth ? "Sign in to download" : form.downloadLabel}
         </a>
 
         <div className="mt-4 text-xs text-[var(--text-muted)]">{meta}</div>

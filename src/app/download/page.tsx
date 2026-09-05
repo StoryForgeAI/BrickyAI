@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ScrollReveal from "@/components/ScrollReveal";
 import Marquee from "@/components/Marquee";
 import DownloadCards from "@/components/DownloadCards";
+import DownloadAuthStatus from "@/components/DownloadAuthStatus";
 import CopyButton from "@/components/CopyButton";
 import Faq from "@/components/Faq";
 import {
@@ -89,7 +90,11 @@ export default function DownloadPage() {
               Everything you need to build and create with Bricky AI.
             </p>
 
-            <div className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-2 text-xs text-[var(--text-muted)] sm:flex-row sm:justify-center sm:gap-3">
+            <div className="mt-4 flex justify-center text-xs text-[var(--text-muted)]">
+              <DownloadAuthStatus />
+            </div>
+
+            <div className="mx-auto mt-6 flex max-w-xl flex-col items-center gap-2 text-xs text-[var(--text-muted)] sm:flex-row sm:justify-center sm:gap-3">
               <span className="inline-flex items-center gap-1.5">
                 <Windows className="h-3.5 w-3.5 text-[var(--accent)]" />
                 Windows

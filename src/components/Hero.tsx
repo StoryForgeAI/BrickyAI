@@ -3,10 +3,12 @@
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import ProductMockup from "@/components/ProductMockup";
+import { useAuth } from "@/context/AuthContext";
 import { ArrowRight, Download } from "@/components/icons";
 
 export default function Hero() {
   const reduce = useReducedMotion();
+  const { requireAuth } = useAuth();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], [0, 120]);
@@ -74,13 +76,14 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.25, ease }}
           className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
-          <a
-            href="/download"
+          <button
+            type="button"
+            onClick={() => requireAuth({ type: "navigate-download" })}
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 text-[15px] font-semibold text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_40px_var(--accent-glow)] sm:w-auto"
           >
             <Download className="h-5 w-5" />
             Download Bricky AI
-          </a>
+          </button>
           <a
             href="#product"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-raised)] px-7 text-[15px] font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)] sm:w-auto"
