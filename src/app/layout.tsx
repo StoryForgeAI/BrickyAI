@@ -18,10 +18,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: "Bricky AI — AI-Powered Roblox Studio Plugin Development",
+  title: "Bricky AI — AI Coding & Roblox Plugin Creator",
   description: siteConfig.description,
   keywords: [
     "Bricky AI",
+    "AI coding",
+    "Luau",
     "Roblox Studio plugins",
     "AI plugin creator",
     "Roblox development",
@@ -30,13 +32,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: siteConfig.url,
-    title: "Bricky AI — AI-Powered Roblox Studio Plugin Development",
+    title: "Bricky AI — AI Coding & Roblox Plugin Creator",
     description: siteConfig.description,
     siteName: siteConfig.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bricky AI — AI-Powered Roblox Studio Plugin Development",
+    title: "Bricky AI — AI Coding & Roblox Plugin Creator",
     description: siteConfig.description,
   },
 };

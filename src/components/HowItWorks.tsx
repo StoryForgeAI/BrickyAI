@@ -8,33 +8,23 @@ import { ArrowDown } from "@/components/icons";
 const STEPS = [
   {
     node: "YOU",
-    title: "Describe your idea",
-    desc: "Tell Bricky AI what plugin you want to build, in plain language.",
+    title: "Describe",
+    desc: "Tell Bricky AI what to build — a Luau system or a new Studio plugin — in plain language.",
   },
   {
     node: "BRICKY AI",
-    title: "The assistant plans",
-    desc: "It turns your request into a structured, step-by-step development plan.",
-  },
-  {
-    node: "AI MODEL",
-    title: "Model does the work",
-    desc: "Your chosen AI model helps generate and shape the plugin code.",
-  },
-  {
-    node: "LOCAL DEVELOPMENT",
-    title: "Builds locally",
-    desc: "All development communication stays inside your secure local Bricky AI environment.",
+    title: "Generate",
+    desc: "The assistant plans the architecture and writes Luau with your chosen AI model.",
   },
   {
     node: "ROBLOX STUDIO",
-    title: "Arrives in Studio",
-    desc: "The work flows into Roblox Studio through the Bricky AI plugin.",
+    title: "Connect",
+    desc: "Plugins and scripts flow into Roblox Studio through the Bricky AI plugin.",
   },
   {
-    node: "PLUGIN",
-    title: "Your plugin",
-    desc: "Test it, refine it, and keep iterating naturally in conversation.",
+    node: "LOOP",
+    title: "Iterate",
+    desc: "Test it, refine it, and keep going in conversation until it's exactly what you need.",
   },
 ];
 
@@ -55,8 +45,8 @@ export default function HowItWorks() {
             From idea to plugin.
           </h2>
           <p className="mt-4 text-[var(--text-secondary)]">
-            A clear pipeline that turns a simple description into a working
-            Roblox Studio plugin — without leaving your desk.
+            A clear pipeline that turns a simple description into working code —
+            whether it&apos;s a game system or a Studio plugin.
           </p>
         </ScrollReveal>
 
@@ -78,7 +68,7 @@ export default function HowItWorks() {
                 <div className="flex gap-5 sm:gap-8">
                   <div className="relative z-10 flex w-14 shrink-0 flex-col items-center">
                     <span className="z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--accent-border)] bg-[var(--surface-raised)] font-mono text-sm font-bold text-[var(--accent)] shadow-[0_0_24px_var(--accent-glow)]">
-                      {step.node === "YOU" ? "01" : String(i + 1).padStart(2, "0")}
+                      {String(i + 1).padStart(2, "0")}
                     </span>
                     {i < STEPS.length - 1 && (
                       <span className="mt-3 text-[var(--accent)]">

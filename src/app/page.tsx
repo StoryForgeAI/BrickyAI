@@ -1,14 +1,16 @@
 import Hero from "@/components/Hero";
 import Marquee from "@/components/Marquee";
-import Positioning from "@/components/Positioning";
+import Pillars from "@/components/Pillars";
+import AICoding from "@/components/AICoding";
+import PluginCreator from "@/components/PluginCreator";
 import HowItWorks from "@/components/HowItWorks";
+import PluginInstall from "@/components/PluginInstall";
 import Features from "@/components/Features";
+import Audience from "@/components/Audience";
 import CommandSystem from "@/components/CommandSystem";
 import AIProviders from "@/components/AIProviders";
-import Architecture from "@/components/Architecture";
-import Showcase from "@/components/Showcase";
-import PluginInstall from "@/components/PluginInstall";
 import Security from "@/components/Security";
+import Showcase from "@/components/Showcase";
 import Faq from "@/components/Faq";
 import CTA from "@/components/CTA";
 
@@ -17,15 +19,17 @@ export default function Home() {
     <>
       <Hero />
       <Marquee />
-      <Positioning />
+      <Pillars />
+      <AICoding />
+      <PluginCreator />
       <HowItWorks />
+      <PluginInstall />
       <Features />
+      <Audience />
       <CommandSystem />
       <AIProviders />
-      <Architecture />
-      <Showcase />
-      <PluginInstall />
       <Security />
+      <Showcase />
       <Faq />
       <CTA />
     </>

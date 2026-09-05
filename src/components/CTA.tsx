@@ -16,11 +16,11 @@ export default function CTA() {
               <div className="bg-grid absolute inset-0 opacity-40" />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-              Start building plugins with AI.
+              One AI workspace for Roblox development.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--text-secondary)]">
-              Download Bricky AI for Windows and connect your AI assistant to
-              Roblox Studio.
+              Download Bricky AI for Windows, connect your AI assistant, and
+              start coding Luau or building Studio plugins.
             </p>
             <div className="mt-8">
               <button

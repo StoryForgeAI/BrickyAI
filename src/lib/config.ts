@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Bricky AI",
-  tagline: "AI-powered Roblox Studio plugin development.",
+  tagline: "Build, code & create Roblox plugins with AI.",
   description:
-    "Build and develop Roblox Studio plugins faster with Bricky AI, an AI-powered desktop development assistant.",
+    "Bricky AI is a local AI development workspace for Roblox. Write, refactor, and debug Luau, or design and create Roblox Studio plugins with AI — from a secure desktop app that connects to Studio.",
   url: "https://brickyai.com",
 };
 

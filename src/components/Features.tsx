@@ -16,19 +16,19 @@ const FEATURES = [
     icon: <Sparkles className="h-5 w-5" />,
     title: "AI Plugin Creation",
     description:
-      "Describe the plugin you want and let Bricky AI help design its architecture.",
-  },
-  {
-    icon: <Plug className="h-5 w-5" />,
-    title: "Roblox Studio Integration",
-    description:
-      "Work directly with Roblox Studio through the Bricky AI plugin.",
+      "Describe a plugin and let Bricky AI help design its architecture, toolbar actions, and structure.",
   },
   {
     icon: <Cpu className="h-5 w-5" />,
-    title: "Multiple AI Providers",
+    title: "Luau Code Help",
     description:
-      "Connect supported AI providers and choose which model powers your chat.",
+      "Write, refactor, and debug Luau scripts and game systems alongside your AI.",
+  },
+  {
+    icon: <Plug className="h-5 w-5" />,
+    title: "Roblox Studio Connection",
+    description:
+      "Work alongside Roblox Studio through the Bricky AI plugin.",
   },
   {
     icon: <Folder className="h-5 w-5" />,
@@ -38,25 +38,26 @@ const FEATURES = [
   },
   {
     icon: <GitBranch className="h-5 w-5" />,
-    title: "Command System",
+    title: "Structured Commands",
     description:
-      "Bricky AI uses a structured command system instead of arbitrary Lua execution.",
+      "Bricky AI works through a controlled command system instead of arbitrary Lua execution.",
   },
   {
     icon: <Lock className="h-5 w-5" />,
-    title: "Local Development",
+    title: "Local & Secure",
     description:
-      "Development communication happens through your local Bricky AI environment.",
+      "Development communication happens locally, behind an authenticated API.",
   },
   {
     icon: <Layers className="h-5 w-5" />,
-    title: "Live Progress",
-    description: "See what Bricky AI is doing while it works.",
+    title: "Multiple AI Providers",
+    description:
+      "Connect supported AI providers and choose which model powers your chat.",
   },
   {
     icon: <Message className="h-5 w-5" />,
-    title: "Plugin Workflow",
-    description: "Go from an idea to a working Roblox Studio plugin faster.",
+    title: "Live Progress",
+    description: "See what Bricky AI is doing while it works.",
   },
 ];
 
@@ -69,11 +70,11 @@ export default function Features() {
             Features
           </div>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-            Built for plugin development.
+            Built for building &amp; coding.
           </h2>
           <p className="mt-4 text-[var(--text-secondary)]">
-            Everything you need to go from a vague idea to a working plugin in
-            Roblox Studio — powered by AI, kept local.
+            Everything you need to go from an empty Script or a rough idea to
+            working code in Roblox Studio — powered by AI, kept local.
           </p>
         </ScrollReveal>
 

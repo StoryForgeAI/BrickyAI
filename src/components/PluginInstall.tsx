@@ -9,7 +9,7 @@ export default function PluginInstall() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="relative overflow-hidden py-24 sm:py-32">
+    <section id="studio" className="relative overflow-hidden py-24 sm:py-32">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-1/2 h-[420px] w-[680px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,var(--accent-dim),transparent_65%)] blur-2xl" />
       </div>
@@ -21,11 +21,12 @@ export default function PluginInstall() {
             Bricky AI ↔ Roblox Studio
           </div>
           <h2 className="mt-5 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-            Connect Bricky AI to Roblox Studio.
+            AI that works alongside Roblox Studio.
           </h2>
           <p className="mx-auto mt-5 max-w-xl leading-relaxed text-[var(--text-secondary)]">
-            Bricky AI uses a Roblox Studio plugin to bridge your AI assistant
-            with Studio. Install it once, and you&apos;re ready to build.
+            Bricky AI bridges your AI assistant with Studio through a Roblox
+            Studio plugin — running on your machine, without claiming access to
+            Studio&apos;s internals or your computer.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

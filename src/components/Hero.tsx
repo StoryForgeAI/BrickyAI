@@ -4,7 +4,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { useRef } from "react";
 import ProductMockup from "@/components/ProductMockup";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowRight, Download } from "@/components/icons";
+import { ArrowRight, Sparkles } from "@/components/icons";
 
 export default function Hero() {
   const reduce = useReducedMotion();
@@ -38,7 +38,7 @@ export default function Hero() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-sm text-[var(--text-secondary)]">
             <span className="h-2 w-2 rounded-full bg-[var(--accent)] pulse-dot" />
-            Your AI Plugin Development Assistant for Roblox Studio
+            Your AI Development Assistant for Roblox
           </span>
         </motion.div>
 
@@ -49,12 +49,11 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.05, ease }}
           className="mx-auto max-w-4xl text-center text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
         >
-          <span className="text-[var(--text-primary)]">Build Roblox </span>
-          <span className="bg-gradient-to-r from-[var(--accent)] to-[#ffb48f] bg-clip-text text-transparent">
-            Plugins
-          </span>
+          <span className="text-[var(--text-primary)]">Build, Code &amp; Create</span>
           <br />
-          <span className="text-[var(--text-primary)]">with AI.</span>
+          <span className="bg-gradient-to-r from-[var(--accent)] to-[#ffb48f] bg-clip-text text-transparent">
+            Roblox Plugins with AI.
+          </span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -64,9 +63,9 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.15, ease }}
           className="mx-auto mt-6 max-w-2xl text-center text-lg leading-relaxed text-[var(--text-secondary)] sm:text-xl"
         >
-          Bricky AI connects your AI assistant directly to Roblox Studio,
-          helping you design, create, debug, and develop powerful plugins
-          faster — all from a secure local desktop app.
+          Bricky AI is a local AI workspace for Roblox development — write,
+          refactor, and debug Luau, or design and generate Roblox Studio plugins.
+          Your AI connects to Studio through a secure desktop app.
         </motion.p>
 
         {/* CTAs */}
@@ -81,15 +80,15 @@ export default function Hero() {
             onClick={() => requireAuth({ type: "navigate-download" })}
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 text-[15px] font-semibold text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_40px_var(--accent-glow)] sm:w-auto"
           >
-            <Download className="h-5 w-5" />
-            Download Bricky AI
+            Start Building
+            <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href="#product"
+            href="#plugin-creator"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-raised)] px-7 text-[15px] font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)] sm:w-auto"
           >
-            See how it works
-            <ArrowRight className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" />
+            Create a Plugin
           </a>
         </motion.div>
 
@@ -117,6 +116,23 @@ export default function Hero() {
         <div className="relative mx-auto mt-14 max-w-3xl">
           <div className="pointer-events-none absolute -inset-x-8 -top-10 -bottom-16 -z-10 rounded-[40px] bg-[radial-gradient(ellipse_at_center,rgba(255,120,71,0.12),transparent_70%)] blur-2xl" />
           <ProductMockup />
+          <motion.div
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-center gap-x-2 gap-y-2 font-mono text-xs text-[var(--text-muted)]"
+          >
+            {["Chat", "AI", "Luau / Plugin", "Roblox Studio", "Result"].map(
+              (step, i, arr) => (
+                <span key={step} className="flex items-center gap-2">
+                  <span className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 py-1">
+                    {step}
+                  </span>
+                  {i < arr.length - 1 && <span className="text-[var(--accent)]">→</span>}
+                </span>
+              )
+            )}
+          </motion.div>
         </div>
       </div>
     </section>

@@ -8,11 +8,11 @@ import { ChevronDown } from "@/components/icons";
 const FAQS = [
   {
     q: "What is Bricky AI?",
-    a: "Bricky AI is an AI-powered desktop assistant for creating and developing Roblox Studio plugins. It connects your AI assistant to Roblox Studio through a secure local setup.",
+    a: "Bricky AI is an AI-powered desktop development workspace for Roblox. With it you can code Luau, build game systems, and create Roblox Studio plugins — connected to Studio through a secure local setup.",
   },
   {
     q: "Is Bricky AI a Roblox game builder?",
-    a: "No. Bricky AI is focused on helping developers create and develop Roblox Studio plugins — not on building games directly.",
+    a: "No. Bricky AI helps you build with AI — writing Luau and creating Roblox Studio plugins — rather than building games wholesale.",
   },
   {
     q: "Can Bricky AI create Roblox Studio plugins?",
