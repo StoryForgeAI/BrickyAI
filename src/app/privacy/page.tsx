@@ -288,7 +288,11 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Necessary</strong> — always active; keeps you signed in,
-            remembers your consent choice, and protects the Service.
+            remembers your consent choice, and protects the Service. This
+            includes an opaque, randomly generated device identifier
+            (<code>bricky_device_id</code>) that the Service uses server-side
+            to ensure the one-time starter credit reward is granted only once
+            per browser/device environment.
           </li>
           <li>
             <strong>Preferences</strong> — optional and off by default; used to

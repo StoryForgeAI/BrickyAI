@@ -6,6 +6,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { getBrowserSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { WINDOWS_DOWNLOAD_URL, PLUGIN_DOWNLOAD_URL } from "@/lib/config";
 import type { Profile } from "@/lib/profile";
+import { claimStarterCredits } from "@/lib/credit";
 import AuthModal from "@/components/auth/AuthModal";
 
 /**
@@ -71,6 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingRef = useRef<AuthPendingAction | null>(null);
+  // Tokens for which the one-time starter-credit claim was already attempted
+  // this page lifetime. Keys off the access token so a fresh session retries.
+  const starterClaimedRef = useRef<Set<string>>(new Set());
+  // Bumped after a successful claim so the read-only profile is re-fetched.
+  const [profileVersion, setProfileVersion] = useState(0);
 
   const supabase = isSupabaseConfigured ? getBrowserSupabaseClient() : null;
 
@@ -159,6 +165,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, runAction, getPending]);
 
+  // Once per session, ask the server for the one-time starter-credit
+  // entitlement. The server decides (validated session, HttpOnly device cookie,
+  // atomic claim in Postgres) and the balance is re-read below; the client
+  // never writes or computes credits. Failed transport attempts are retried on
+  // the next session refresh instead of being permanently marked done.
+  useEffect(() => {
+    if (!supabase || !session?.access_token) return;
+    const token = session.access_token;
+    if (starterClaimedRef.current.has(token)) return;
+    starterClaimedRef.current.add(token);
+    let active = true;
+    void (async () => {
+      const result = await claimStarterCredits();
+      if (!active) return;
+      if (result.ok) {
+        // Claim consumed or already claimed — refresh the balance so the UI
+        // shows the server-computed value (e.g. 80 on first sign-in).
+        setProfileVersion((v) => v + 1);
+      } else {
+        // Transport failure only — allow a retry on the next session event.
+        starterClaimedRef.current.delete(token);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [supabase, session?.access_token]);
+
   // Fetch the signed-in user's read-only `profiles` row whenever the auth user
   // changes. The browser uses its own user ID only for the SELECT (the fetch is
   // scoped to the authenticated user), and credits/subscription remain
@@ -183,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [supabase, user?.id]);
+  }, [supabase, user?.id, profileVersion]);
 
   const openAuth = useCallback(() => {
     setError(null);

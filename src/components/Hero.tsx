@@ -47,12 +47,12 @@ export default function Hero() {
           initial={reduce ? false : { opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05, ease }}
-          className="mx-auto max-w-4xl text-center text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
+          className="mx-auto max-w-4xl text-center text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl md:text-7xl"
         >
-          <span className="text-[var(--text-primary)]">Build, Code &amp; Create</span>
+          <span className="text-[var(--text-primary)]">Build Roblox.</span>
           <br />
           <span className="bg-gradient-to-r from-[var(--accent)] to-[#ffb48f] bg-clip-text text-transparent">
-            Roblox Plugins with AI.
+            Faster.
           </span>
         </motion.h1>
 
@@ -63,9 +63,8 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.15, ease }}
           className="mx-auto mt-6 max-w-2xl text-center text-lg leading-relaxed text-[var(--text-secondary)] sm:text-xl"
         >
-          Bricky AI is a local AI workspace for Roblox development — write,
-          refactor, and debug Luau, or design and generate Roblox Studio plugins.
-          Your AI connects to Studio through a secure desktop app.
+          Bricky AI helps you build, code, debug, and create Roblox Studio
+          plugins with AI — without getting stuck on the technical stuff.
         </motion.p>
 
         {/* CTAs */}
@@ -84,7 +83,7 @@ export default function Hero() {
             <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href="#plugin-creator"
+            href="#plugins"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-raised)] px-7 text-[15px] font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)] sm:w-auto"
           >
             <Sparkles className="h-4 w-4" />
@@ -122,16 +121,14 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="mx-auto mt-6 flex max-w-xl flex-wrap items-center justify-center gap-x-2 gap-y-2 font-mono text-xs text-[var(--text-muted)]"
           >
-            {["Chat", "AI", "Luau / Plugin", "Roblox Studio", "Result"].map(
-              (step, i, arr) => (
-                <span key={step} className="flex items-center gap-2">
-                  <span className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 py-1">
-                    {step}
-                  </span>
-                  {i < arr.length - 1 && <span className="text-[var(--accent)]">→</span>}
+            {["Describe", "Build", "Test in Studio", "Improve"].map((step, i, arr) => (
+              <span key={step} className="flex items-center gap-2">
+                <span className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 py-1">
+                  {step}
                 </span>
-              )
-            )}
+                {i < arr.length - 1 && <span className="text-[var(--accent)]">→</span>}
+              </span>
+            ))}
           </motion.div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import ScrollReveal from "@/components/ScrollReveal";
-import { Download } from "@/components/icons";
+import { ArrowRight, Download } from "@/components/icons";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CTA() {
@@ -16,20 +16,27 @@ export default function CTA() {
               <div className="bg-grid absolute inset-0 opacity-40" />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-              One AI workspace for Roblox development.
+              Ready to build?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--text-secondary)]">
-              Download Bricky AI for Windows, connect your AI assistant, and
-              start coding Luau or building Studio plugins.
+              Get the app, sign in with Google, and start with 80 free credits.
+              Your first plugin is closer than you think.
             </p>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={() => requireAuth({ type: "navigate-download" })}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-black transition-all duration-200 hover:shadow-[0_0_44px_var(--accent-glow)]"
-                style={{ backgroundColor: "var(--accent)" }}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 text-[15px] font-semibold text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_40px_var(--accent-glow)] sm:w-auto"
               >
-                <Download className="h-5 w-5" />
+                Start Building
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => requireAuth({ type: "download-windows" })}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-7 text-[15px] font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)] sm:w-auto"
+              >
+                <Download className="h-4 w-4" />
                 Download Bricky AI
               </button>
             </div>

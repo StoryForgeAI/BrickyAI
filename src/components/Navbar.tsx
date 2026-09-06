@@ -11,12 +11,11 @@ import { Close, Download, Logo, Menu, Spinner, User } from "@/components/icons";
 
 const NAV_LINKS = [
   { label: "Product", href: "/#product" },
-  { label: "Features", href: "/#features" },
-  { label: "How it Works", href: "/#how-it-works" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "Plugins", href: "/#plugins" },
+  { label: "Pricing", href: "/#pricing" },
 ];
 
-const SECTION_IDS = ["product", "features", "how-it-works", "faq"];
+const SECTION_IDS = ["product", "plugins", "pricing"];
 
 function shortEmail(email: string) {
   const [name, domain] = email.split("@");

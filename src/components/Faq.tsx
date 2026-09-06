@@ -15,44 +15,24 @@ const FAQS = [
     a: "No. Bricky AI helps you build with AI — writing Luau and creating Roblox Studio plugins — rather than building games wholesale.",
   },
   {
-    q: "Can Bricky AI create Roblox Studio plugins?",
-    a: "Yes. Bricky AI helps you design, generate, and iterate on Roblox Studio plugins through conversation and a structured command system.",
-  },
-  {
     q: "Does Bricky AI work with Roblox Studio?",
     a: "Yes. Bricky AI connects to Roblox Studio through a Roblox Studio plugin, bridging the desktop app to your active Studio workspace.",
   },
   {
+    q: "Can Bricky AI create Roblox Studio plugins?",
+    a: "Yes. Describe the plugin you want and Bricky AI will help you structure, generate, and iterate on it — then install it straight into Studio.",
+  },
+  {
     q: "Which AI models can I use?",
-    a: "Bricky AI lets you connect supported AI providers and choose which model powers your chat. Model availability may vary.",
-  },
-  {
-    q: "Can I use ChatGPT?",
-    a: "Bricky AI supports connecting supported AI providers, which can include OpenAI models such as ChatGPT. Availability may vary.",
-  },
-  {
-    q: "Can I use Claude?",
-    a: "Bricky AI supports connecting supported AI providers, which can include Anthropic models such as Claude. Availability may vary.",
-  },
-  {
-    q: "Where is my project data stored?",
-    a: "Development communication happens through your local Bricky AI environment. Keep project data organization in mind — refer to the privacy page for details.",
-  },
-  {
-    q: "Does Bricky AI require an internet connection?",
-    a: "Connecting to AI providers generally requires an internet connection, while the local Bricky AI environment and plugin communication happen on your machine.",
-  },
-  {
-    q: "How do I install the Roblox Studio plugin?",
-    a: "Download Bricky AI, open it, then follow the in-app steps to install and enable the Roblox Studio plugin. See the 'How to install the plugin' tutorial above.",
-  },
-  {
-    q: "Where can I download Bricky AI?",
-    a: "You can download Bricky AI for Windows from the Download page on this site.",
+    a: "Bricky AI lets you connect supported AI providers — which can include OpenAI models such as ChatGPT and Anthropic models such as Claude — and choose which model powers your chat. Availability may vary.",
   },
   {
     q: "Is Bricky AI free?",
-    a: "Current availability and model access may change. Check the app for the latest information.",
+    a: "Every new account starts with 80 free credits — a one-time starter grant. You can start building before deciding whether to pay for more.",
+  },
+  {
+    q: "Where can I download Bricky AI?",
+    a: "You can download Bricky AI for Windows 10 / 11 from the Download page on this site.",
   },
 ];
 

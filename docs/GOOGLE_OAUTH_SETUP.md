@@ -113,14 +113,19 @@ To make login return to the Bricky AI production domain (never a leftover
 The profile row must exist exactly once per user. If you already created the
 table and trigger, make sure the insert is **idempotent** so a race between
 the trigger and any concurrent code can never create duplicates or fail the
-sign-in. Recommended SQL (run once in the Supabase SQL editor):
+sign-in. **Do not set `credits` in the trigger** — the starter credit balance
+is granted exclusively by the server-side claim function (see
+`docs/CREDITS_SETUP.md`), so the trigger inserts `id` and `email` only and
+leaves `credits` at `NULL` (an account with a `NULL` balance receives **80**
+starting credits on its first server-validated claim). Recommended SQL (run
+once in the Supabase SQL editor):
 
 ```sql
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   subscription text,
-  credits numeric default 0,
+  credits numeric,
   created_at timestamptz default now()
 );
 

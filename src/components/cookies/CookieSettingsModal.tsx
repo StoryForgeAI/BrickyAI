@@ -133,8 +133,8 @@ export default function CookieSettingsModal() {
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                   Required for the site to work: keeping you signed in, remembering
-                  your consent choice, and protecting the service. These cannot be
-                  turned off.
+                  your consent choice, safeguarding the one-time starter credit
+                  reward, and protecting the service. These cannot be turned off.
                 </p>
               </div>
 
