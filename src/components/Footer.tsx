@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
 import { companyInfo, hasCompleteCompanyInfo } from "@/lib/company";
+import CookieSettingsButton from "@/components/cookies/CookieSettingsButton";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -83,6 +84,11 @@ export default function Footer() {
                 <Link href="/terms" className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">
                   Terms of Service
                 </Link>
+              </li>
+              <li>
+                <CookieSettingsButton className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">
+                  Cookie Settings
+                </CookieSettingsButton>
               </li>
             </ul>
           </div>

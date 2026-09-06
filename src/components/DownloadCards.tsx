@@ -100,7 +100,7 @@ function Card({ icon, badge, title, description, meta, fileLabel, note, href, ac
         </div>
 
         <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
-          {needsAuth ? "Sign in with Google or email to continue." : note}
+          {needsAuth ? "Sign in with Google to continue." : note}
         </p>
       </div>
     </motion.article>

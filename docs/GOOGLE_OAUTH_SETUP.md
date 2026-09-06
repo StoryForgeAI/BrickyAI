@@ -1,10 +1,13 @@
 # Google OAuth / "Continue with Google" setup
 
-Bricky AI signs users in through Supabase Auth. To offer "Continue with
-Google" you need to enable the Google provider in Supabase **and** create the
-matching OAuth client in the Google Cloud Console. Both must agree on the
-redirect URL and the site domain, otherwise Google (and/or Supabase) will
-reject the sign-in.
+Bricky AI signs users in through Supabase Auth. Sign-in is **Google-only** —
+the site has no email/password, signup, or password-reset UI, so you should
+**disable the Email provider** in Supabase (Authentication → Providers → Email)
+and remove it from the Google consent screen, leaving Google as the sole
+provider. To offer "Continue with Google" you need to enable the Google
+provider in Supabase **and** create the matching OAuth client in the Google
+Cloud Console. Both must agree on the redirect URL and the site domain,
+otherwise Google (and/or Supabase) will reject the sign-in.
 
 The site never hardcodes a redirect origin. It builds the post-auth redirect
 from `NEXT_PUBLIC_SITE_URL` when set (production), otherwise from the current
@@ -90,3 +93,56 @@ To make login return to the Bricky AI production domain (never a leftover
 - **`error=access_denied` on return** → the user cancelled the Google prompt
   or the consent screen rejected the request; the site shows a friendly
   message rather than a crash.
+
+## 7. Session behavior and account records
+
+- Sessions are persisted by the Supabase browser client (PKCE flow). A user who
+  signs in once stays signed in across visits until the session expires; the
+  site restores it and only shows the sign-in window when a feature needs
+  authentication and no valid session exists.
+- Logging out (sign-out button) calls `supabase.auth.signOut()`, which revokes
+  the session both server- and client-side, so returning to the site does not
+  silently restore a previous session.
+- Account records live in the `auth.users` table. A per-user row in the
+  `profiles` table is created **inside the database** (a trigger on
+  `auth.users`); the website only ever reads `profiles`, never writes it, so
+  duplicate or incomplete profile rows are not created from the client.
+
+## 8. Recommended `profiles` trigger (idempotent)
+
+The profile row must exist exactly once per user. If you already created the
+table and trigger, make sure the insert is **idempotent** so a race between
+the trigger and any concurrent code can never create duplicates or fail the
+sign-in. Recommended SQL (run once in the Supabase SQL editor):
+
+```sql
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text,
+  subscription text,
+  credits numeric default 0,
+  created_at timestamptz default now()
+);
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email)
+  values (new.id, new.email)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+```
+
+Keep `enforce_row_level_security` enabled on `profiles` and give users only
+`select` privileges on their own row; the `security definer` trigger must have
+`insert` privileges.

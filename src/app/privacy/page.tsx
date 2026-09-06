@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 export const metadata: Metadata = {
   title: "Privacy Policy — Bricky AI",
   description:
-    "How Bricky AI collects, uses, and protects your information: sign-in, AI features, data that stays local, your rights, and more.",
+    "How Bricky AI collects, uses, and protects your information: Google sign-in, cookies and consent, AI features, data that stays local, your rights, and more.",
 };
 
 const TOC = [
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
     <LegalLayout
       eyebrow="Legal"
       title="Privacy Policy"
-      lastUpdated="September 5, 2026"
+      lastUpdated="September 6, 2026"
       intro={
         <>
           This Privacy Policy explains what information{" "}
@@ -130,34 +130,40 @@ export default function PrivacyPage() {
 
       <LegalSection id="sec-5" num="5" title="Information you provide directly">
         <p>
-          When you create an account, sign in, or contact support, you may
-          provide us with information directly, including your email address
-          and any information you include in messages to us.
+          Bricky AI uses <strong>Google sign-in only</strong> — there is no
+          email-and-password registration and we never receive a password from
+          you. When you create an account, sign in, or contact support, the
+          information we receive about you comes from your Google account and
+          from how you use the Service (such as messages to support and the
+          inputs you submit to AI features).
         </p>
       </LegalSection>
 
       <LegalSection id="sec-6" num="6" title="Email address and login">
         <p>
           Your <strong>email address</strong> is the primary identifier of your
-          Bricky AI account. You can either register with your email address
-          and a password, or sign in with Google (in which case Google shares
-          your email address with us).
+          Bricky AI account. Sign-in is available exclusively through Google
+          OAuth; there is no email-and-password registration and no password to
+          reset. When you sign in with Google, Google shares the email address
+          associated with your Google account with us and we store it as your
+          profile email.
         </p>
         <p>
-          Your email address is used to identify your account, to let you
-          recover your password or verify your identity when you request it, and
-          to send you important service communications. We will not send you
-          marketing emails without your consent.
+          Your email address is used to identify your account and to send you
+          important service communications. We do not send you marketing emails
+          without your consent.
         </p>
       </LegalSection>
 
       <LegalSection id="sec-7" num="7" title="Google account information">
         <p>
-          When you choose &ldquo;Continue with Google&rdquo;, you are authenticating with
+          Because &ldquo;Continue with Google&rdquo; is the{" "}
+          <strong>only</strong> way to sign in, you always authenticate with
           Google, a separate data controller. Google provides us with the
-          information you agreed to share, typically your email address and a
+          information you agreed to share — typically your email address and a
           Google account identifier (and, depending on configuration, basic
-          profile information such as your name and profile picture).
+          profile information such as your name and profile picture). We store
+          this as your profile in your Bricky AI account.
         </p>
         <p>
           We do not receive or store your Google password. Google&apos;s own
@@ -171,9 +177,11 @@ export default function PrivacyPage() {
           To operate accounts securely, some identifiers involved in sign-in
           are technical and are not meaningfully tied to your identity outside
           the Service. For example, Supabase generates an encrypted,
-          account-bound identifier and records whether your email address has
-          been verified. These details are used to keep accounts secure and to
-          prevent abuse.
+          account-bound identifier and records the verification status provided
+          by Google. Because accounts are created through Google, they arrive
+          already verified by Google — we do not separately require an email
+          confirmation step. These details are used to keep accounts secure and
+          to prevent abuse.
         </p>
       </LegalSection>
 
@@ -229,7 +237,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             responding to support requests and providing account services
-            (including password recovery and account deletion);
+            (including account deletion);
           </li>
           <li>ensuring safety, security, and compliance with the law; and</li>
           <li>
@@ -267,25 +275,45 @@ export default function PrivacyPage() {
 
       <LegalSection id="sec-15" num="15" title="Cookies and similar technology">
         <p>
-          The Service relies on <strong>essential cookies and session
-          technology</strong> to keep you signed in and to make the website
-          function — for example, the small storage Supabase uses to hold your
-          authentication session. These are technically necessary and expire
-          when your session ends.
+          The Service relies on <strong>essential session technology</strong>{" "}
+          to keep you signed in and to make the website function — for example,
+          the small storage Supabase uses to hold your authentication session.
+          This is technically necessary and is not optional.
+        </p>
+        <p>
+          On your first visit, the site presents a cookie banner where you can
+          accept all, reject non-essential storage, or open Cookie Settings and
+          choose per category. We use two categories:
+        </p>
+        <ul>
+          <li>
+            <strong>Necessary</strong> — always active; keeps you signed in,
+            remembers your consent choice, and protects the Service.
+          </li>
+          <li>
+            <strong>Preferences</strong> — optional and off by default; used to
+            remember harmless choices you make on the site.
+          </li>
+        </ul>
+        <p>
+          Your choice is stored on your device and can be changed at any time
+          via <strong>Cookie Settings</strong> in the site footer (or in the
+          sign-in window).
         </p>
         <div className="legal-callout">
-          We do not use advertising cookies, tracking cookies, fingerprinting,
-          or third-party ad networks, and we do not sell or share your
-          information for advertising.
+          We do not use advertising cookies, tracking cookies, analytics
+          cookies, fingerprinting, or third-party ad networks, and we do not
+          sell or share your information for advertising.
         </div>
       </LegalSection>
 
       <LegalSection id="sec-16" num="16" title="Local storage">
         <p>
           Your browser and the desktop application use local storage to keep
-          you signed in and remember harmless preferences. This data stays on
-          your device and is not sent to us unless a feature you actively use
-          requires it.
+          you signed in (Supabase&apos;s authentication session), to record your
+          cookie-consent choice, and to remember harmless preferences. This data
+          stays on your device and is not sent to us unless a feature you
+          actively use requires it.
         </p>
       </LegalSection>
 
@@ -345,14 +373,16 @@ export default function PrivacyPage() {
         <p>
           Account authentication and related account data are handled by{" "}
           <strong>Supabase</strong>, our backend infrastructure provider. This
-          means your email address, account identifier, verification status,
-          and session data reside within Supabase&apos;s infrastructure, which
-          is protected by its security practices. The website itself is served
-          on <strong>Vercel</strong>, which processes the technical data
-          described in <a href="#sec-11">Section 11</a> (such as IP addresses
-          and request metadata) to deliver and protect the site. The rest of
-          the Service uses hosting and infrastructure providers located in
-          multiple regions.
+          means the email address Google shares with us, your account
+          identifier, verification status, and session data reside within
+          Supabase&apos;s infrastructure, which is protected by its security
+          practices. A record of the account (including the Google-provided
+          email) is stored in Supabase&apos;s account database. The website
+          itself is served on <strong>Vercel</strong>, which processes the
+          technical data described in <a href="#sec-11">Section 11</a> (such
+          as IP addresses and request metadata) to deliver and protect the
+          site. The rest of the Service uses hosting and infrastructure
+          providers located in multiple regions.
         </p>
       </LegalSection>
 

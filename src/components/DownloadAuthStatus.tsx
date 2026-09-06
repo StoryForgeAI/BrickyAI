@@ -26,7 +26,7 @@ export default function DownloadAuthStatus() {
       {user ? (
         <>You&apos;re signed in — choose a download below.</>
       ) : (
-        <>Sign in with Google or email to start your download.</>
+        <>Sign in with Google to start your download.</>
       )}
     </span>
   );

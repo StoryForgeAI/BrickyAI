@@ -24,7 +24,7 @@ export function getAuthRedirectOrigin(): string {
 
 /**
  * Builds the full post-auth landing URL for a given site path.
- * `path` may be empty, "/", or a full path such as "/auth/update-password".
+ * `path` may be empty, "/", or a full path such as "/download".
  * Falls back to the site root when no path is provided.
  */
 export function authRedirectTo(path = "/"): string {

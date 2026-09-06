@@ -8,8 +8,6 @@ import { WINDOWS_DOWNLOAD_URL, PLUGIN_DOWNLOAD_URL } from "@/lib/config";
 import type { Profile } from "@/lib/profile";
 import AuthModal from "@/components/auth/AuthModal";
 
-export type AuthMode = "login" | "signup" | "forgot";
-
 /**
  * A deferred action that runs after a successful sign-in. Only JSON-serializable
  * actions are supported because Google authentication requires a full-page
@@ -31,13 +29,11 @@ interface AuthContextValue {
   session: Session | null;
   /** The signed-in user's `profiles` row (read-only; credits/subscription are server-managed). */
   profile: Profile | null;
-  /** Open the auth modal (optionally in a specific mode). */
-  openAuth: (options?: { mode?: AuthMode }) => void;
+  /** Open the auth (Google-only) modal. */
+  openAuth: () => void;
   /** Close the modal and cancel any deferred action stored by `requireAuth`. */
   closeAuth: () => void;
   isOpen: boolean;
-  mode: AuthMode;
-  setMode: (mode: AuthMode) => void;
   /** Friendly, user-presentable error message (never raw backend errors). */
   error: string | null;
   clearError: () => void;
@@ -73,7 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState<string | null>(null);
   const pendingRef = useRef<AuthPendingAction | null>(null);
 
@@ -190,9 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, user?.id]);
 
-  const openAuth = useCallback((options?: { mode?: AuthMode }) => {
+  const openAuth = useCallback(() => {
     setError(null);
-    setMode(options?.mode ?? "login");
     setIsOpen(true);
   }, []);
 
@@ -219,17 +213,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       storePending(action);
-      openAuth({ mode: "login" });
+      openAuth();
     },
     [user, runAction, storePending, openAuth]
   );
-
-  /** Called by the modal once a same-page login/signup succeeds. */
-  const finishAuth = useCallback(() => {
-    const stored = getPending();
-    if (stored) runAction(stored);
-    closeAuth();
-  }, [getPending, runAction, closeAuth]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -241,14 +228,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       openAuth,
       closeAuth,
       isOpen,
-      mode,
-      setMode,
       error,
       clearError,
       signOut,
       requireAuth,
     }),
-    [loading, user, session, profile, openAuth, closeAuth, isOpen, mode, error, clearError, signOut, requireAuth]
+    [loading, user, session, profile, openAuth, closeAuth, isOpen, error, clearError, signOut, requireAuth]
   );
 
   return (
@@ -256,10 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
       <AuthModal
         open={isOpen}
-        mode={mode}
         onClose={closeAuth}
-        onChangeView={setMode}
-        onAuthenticated={finishAuth}
         error={error}
         onClearError={clearError}
       />

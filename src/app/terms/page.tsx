@@ -64,7 +64,7 @@ export default function TermsPage() {
     <LegalLayout
       eyebrow="Legal"
       title="Terms of Service"
-      lastUpdated="September 5, 2026"
+      lastUpdated="September 6, 2026"
       intro={
         <>
           These Terms of Service (&ldquo;Terms&rdquo;) are a binding agreement between you
@@ -172,10 +172,10 @@ export default function TermsPage() {
 
       <LegalSection id="sec-4" num="4" title="Account creation">
         <p>
-          Some features of the Service require an Account. You may create one
-          using Google sign-in or an email address and password. When you create
-          an Account you agree to provide accurate information and to keep it
-          up to date.
+          Some features of the Service require an Account. Accounts are created
+          exclusively through Google sign-in — there is no email-and-password
+          or username registration. When you create an Account you agree to
+          provide accurate information and to keep it up to date.
         </p>
         <p>
           Accounts are personal. You may not share your login credentials with
@@ -185,29 +185,32 @@ export default function TermsPage() {
 
       <LegalSection id="sec-5" num="5" title="Google login / authentication">
         <p>
-          When you choose &ldquo;Continue with Google&rdquo;, authentication is handled by
-          Google through its OAuth service. Google provides us with information
-          about your Google account that you agree to share — typically your
-          email address and Google account identifier, and depending on the
-          configuration, profile information.
+          &ldquo;Continue with Google&rdquo; is the <strong>only</strong> way to
+          sign in to the Service. Authentication is handled by Google through
+          its OAuth service. Google provides us with information about your
+          Google account that you agree to share — typically your email address
+          and Google account identifier, and depending on the configuration,
+          profile information.
         </p>
         <p>
           Your use of Google&apos;s services remains subject to Google&apos;s
           own terms and privacy policy. We do not receive or store your Google
-          password.
+          password, and there is no other password for your Bricky AI account.
         </p>
       </LegalSection>
 
       <LegalSection id="sec-6" num="6" title="Account security">
         <p>
-          You are responsible for keeping your credentials confidential and for
-          all activity that occurs under your Account. If you believe your
-          Account has been compromised, change your password and contact us
-          immediately.
+          You are responsible for the security of the Google account you use to
+          sign in and for all activity that occurs under your Bricky AI Account.
+          If you believe your Account has been compromised, secure your Google
+          account and contact us immediately.
         </p>
         <p>
-          If you sign in with Google, you are responsible for the security of
-          your Google account and for the access you grant to Bricky AI.
+          Because sign-in is tied to your Google account, keeping that Google
+          account secure (including its recovery options and two-step
+          verification) protects access to your Bricky AI account. There are no
+          Bricky AI passwords to reset.
         </p>
       </LegalSection>
 
@@ -645,7 +648,10 @@ export default function TermsPage() {
           </a>{" "}
           describes what information we collect and process, why, how long it is
           kept, and the rights you have. By using the Service you acknowledge
-          that you have read it.
+          that you have read it. When you use the website you may also be asked
+          to choose which non-essential storage to allow; you can review or
+          change that choice at any time via <strong>Cookie Settings</strong> in
+          the site footer.
         </p>
       </LegalSection>
 

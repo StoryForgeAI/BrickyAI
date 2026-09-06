@@ -117,8 +117,8 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
               </p>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                 {(profile?.email_verified ?? false) || user.email_confirmed_at
-                  ? "Email verified"
-                  : "Email not verified yet"}
+                  ? "Email verified via Google"
+                  : "Connected with Google"}
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-[var(--surface)] px-3 py-2">
