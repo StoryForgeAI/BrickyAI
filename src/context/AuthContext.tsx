@@ -17,7 +17,8 @@ import AuthModal from "@/components/auth/AuthModal";
 export type AuthPendingAction =
   | { type: "navigate-download" }
   | { type: "download-windows" }
-  | { type: "download-plugin" };
+  | { type: "download-plugin" }
+  | { type: "navigate-pricing" };
 
 const PENDING_STORAGE_KEY = "bricky-auth-pending";
 
@@ -108,7 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       if (action.type === "download-windows") startDownload(WINDOWS_DOWNLOAD_URL);
       else if (action.type === "download-plugin") startDownload(PLUGIN_DOWNLOAD_URL);
-      else if (action.type === "navigate-download") router.push("/download");
+      else if (action.type === "navigate-download" || action.type === "navigate-pricing")
+        router.push(action.type === "navigate-download" ? "/download" : "/pricing");
       storePending(null);
     },
     [router, storePending]

@@ -12,10 +12,10 @@ import { Close, Download, Logo, Menu, Spinner, User } from "@/components/icons";
 const NAV_LINKS = [
   { label: "Product", href: "/#product" },
   { label: "Plugins", href: "/#plugins" },
-  { label: "Pricing", href: "/#pricing" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
-const SECTION_IDS = ["product", "plugins", "pricing"];
+const SECTION_IDS = ["product", "plugins"];
 
 function shortEmail(email: string) {
   const [name, domain] = email.split("@");
@@ -265,7 +265,9 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => {
-            const isActive = pathname === "/" && active === link.href.replace("/#", "");
+            const isActive =
+              (link.href.startsWith("/#") && pathname === "/" && active === link.href.replace("/#", "")) ||
+              (link.href === "/pricing" && pathname === "/pricing");
             return (
               <Link
                 key={link.href}

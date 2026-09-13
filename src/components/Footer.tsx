@@ -54,7 +54,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#pricing" className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">
+                <Link href="/pricing" className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]">
                   Pricing
                 </Link>
               </li>
