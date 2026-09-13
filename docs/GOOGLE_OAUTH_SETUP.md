@@ -36,7 +36,8 @@ local development and Vercel preview URLs working automatically.
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**,
    type **Web application**:
    - **Authorized JavaScript origins:** add
-     - `https://brickyai.com`
+     - `https://bricky-ai.vercel.app` (current production deployment)
+     - `https://brickyai.com` (brand domain, if/when it points at the site)
      - `http://localhost:3000` (for local testing)
    - **Authorized redirect URIs:** add the Supabase callback from step 1
      (`https://<your-project-ref>.supabase.co/auth/v1/callback`).
@@ -54,16 +55,16 @@ To make login return to the Bricky AI production domain (never a leftover
 `localhost:3000` from development):
 
 1. In Vercel (**Project → Settings → Environment Variables**) set
-   `NEXT_PUBLIC_SITE_URL` to your deployed domain, e.g. `https://brickyai.com`,
+   `NEXT_PUBLIC_SITE_URL` to your deployed domain, e.g. `https://bricky-ai.vercel.app`,
    scoped to the **Production** environment. Leave it unset for Local/Preview
    so those use the current origin.
 2. In Vercel, also set `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and server-only `SUPABASE_SECRET_KEY`.
 3. In Supabase → **Authentication → URL Configuration**, make sure the
-   **Site URL** is the production domain (e.g. `https://brickyai.com`) and the
-   **Redirect URLs** list includes it. A stale `http://localhost:3000` Site URL
-   is the classic cause of production logins rebounding to localhost when
-   `redirectTo` is ever missing.
+   **Site URL** is the production domain (e.g. `https://bricky-ai.vercel.app`)
+   and the **Redirect URLs** list includes it. A stale `http://localhost:3000`
+   Site URL is the classic cause of production logins rebounding to localhost
+   when `redirectTo` is ever missing.
 4. Redeploy the site after changing environment variables.
 
 ## 5. Local testing
@@ -151,3 +152,16 @@ create trigger on_auth_user_created
 Keep `enforce_row_level_security` enabled on `profiles` and give users only
 `select` privileges on their own row; the `security definer` trigger must have
 `insert` privileges.
+
+## 9. Desktop application sign-in
+
+The Bricky AI desktop app authenticates by opening the browser to the
+website's `/auth/desktop` route using the same Google provider and callback
+configured above — no separate OAuth client is needed. The desktop flow
+reuses `NEXT_PUBLIC_SITE_URL` to build the browser redirect deterministically.
+
+The full flow, database table, API contract and Tauri integration guide are in
+`docs/DESKTOP_AUTH_SETUP.md`. The only domain-level prerequisite is ensuring
+that `NEXT_PUBLIC_SITE_URL` is set to the production domain in Vercel and that
+the domain is listed in Google's Authorized JavaScript origins (see [section
+2](#2-google-cloud-console)).

@@ -209,6 +209,11 @@ export default function Navbar() {
   const [active, setActive] = useState("");
   const { requireAuth } = useAuth();
 
+  // On the desktop-app sign-in page the authentication UI is owned by the page
+  // itself; the navbar's login/download controls are hidden so they cannot
+  // hijack the handshake with the site-wide auth flow.
+  const isDesktopAuthPage = pathname === "/auth/desktop";
+
   const handleDownload = () => {
     setOpen(false);
     requireAuth({ type: "navigate-download" });
@@ -285,15 +290,19 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <AccountMenu onNavigate={() => setOpen(false)} />
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_24px_var(--accent-glow)]"
-          >
-            <Download className="h-4 w-4" />
-            Download
-          </button>
+          {!isDesktopAuthPage && (
+            <>
+              <AccountMenu onNavigate={() => setOpen(false)} />
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--accent)] px-5 text-sm font-medium text-black transition-all duration-200 hover:bg-[var(--accent-strong)] hover:shadow-[0_0_24px_var(--accent-glow)]"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </button>
+            </>
+          )}
         </div>
 
         <button
@@ -339,17 +348,21 @@ export default function Navbar() {
                 transition={{ delay: 0.25 }}
                 className="mt-3 flex flex-col gap-2"
               >
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-sm font-medium text-black transition-colors hover:bg-[var(--accent-strong)]"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Bricky AI
-                </button>
-                <div className="rounded-xl border border-[var(--border)] p-2">
-                  <AccountMenu onNavigate={() => setOpen(false)} />
-                </div>
+                {!isDesktopAuthPage && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleDownload}
+                      className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-sm font-medium text-black transition-colors hover:bg-[var(--accent-strong)]"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Bricky AI
+                    </button>
+                    <div className="rounded-xl border border-[var(--border)] p-2">
+                      <AccountMenu onNavigate={() => setOpen(false)} />
+                    </div>
+                  </>
+                )}
               </motion.div>
             </div>
           </motion.div>

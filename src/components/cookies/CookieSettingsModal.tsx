@@ -132,9 +132,10 @@ export default function CookieSettingsModal() {
                   <Toggle checked disabled label="Necessary cookies" />
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-                  Required for the site to work: keeping you signed in, remembering
-                  your consent choice, safeguarding the one-time starter credit
-                  reward, and protecting the service. These cannot be turned off.
+                  Required for the site to work: the authentication session
+                  storage needed to keep you signed in, remembering your consent
+                  choice, safeguarding the one-time starter credit reward, and
+                  protecting the service. These cannot be turned off.
                 </p>
               </div>
 

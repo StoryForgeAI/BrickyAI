@@ -129,8 +129,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
 
       // Detect a failed OAuth redirect (e.g. the user cancelled at Google).
+      // Skipped on the desktop-app sign-in page, which renders its own inline
+      // error state instead of the site-wide modal (see DesktopAuthClient).
       const params = new URLSearchParams(window.location.search);
-      if (params.get("error")) {
+      if (params.get("error") && window.location.pathname !== "/auth/desktop") {
         setError("Google sign-in was cancelled or could not be completed. Please try again.");
         setIsOpen(true);
         window.history.replaceState({}, "", window.location.pathname);
