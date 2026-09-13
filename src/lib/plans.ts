@@ -133,6 +133,7 @@ export const COMPARISON_COLUMNS: Array<{ key: PlanId | "free"; label: string; pr
 
 export const COMPARISON_ROWS: ComparisonRow[] = [
   { label: "Monthly price", free: "$0", starter: "$4.99", pro: "$9.99", max: "$19.99" },
+  { label: "Requires a supported AI provider", free: "yes", starter: "yes", pro: "yes", max: "yes" },
   { label: "Use your own supported AI provider", free: "yes", starter: "yes", pro: "yes", max: "yes" },
   { label: "Roblox scripting with Bricky AI", free: "yes", starter: "yes", pro: "yes", max: "yes" },
   { label: "Roblox plugin creation", free: "yes", starter: "yes", pro: "yes", max: "yes" },

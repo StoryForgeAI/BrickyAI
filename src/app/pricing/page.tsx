@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ScrollReveal from "@/components/ScrollReveal";
 import PricingCards from "@/components/pricing/PricingCards";
 import PricingFaq from "@/components/pricing/PricingFaq";
-import { Check } from "@/components/icons";
+import { ArrowRight, Check, Cpu, Layers, Plug, Sparkles } from "@/components/icons";
 import { COMPARISON_COLUMNS, COMPARISON_ROWS, type CellValue } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -10,6 +10,27 @@ export const metadata: Metadata = {
   description:
     "Simple, transparent pricing for Bricky AI — the AI-powered workspace for Roblox scripting and Studio plugin development. AI provider usage is separate.",
 };
+
+const PROVIDER_STEPS = [
+  {
+    icon: Layers,
+    step: "1",
+    title: "Choose a Bricky AI plan",
+    body: "Pick Free, Starter, Pro, or Max. Every plan needs a supported AI provider for AI-powered features.",
+  },
+  {
+    icon: Plug,
+    step: "2",
+    title: "Connect a supported AI provider",
+    body: "Configure your own provider account or API access — the supported providers are shown in the application.",
+  },
+  {
+    icon: Sparkles,
+    step: "3",
+    title: "Use Bricky AI for Roblox development",
+    body: "Build scripts and Studio plugins with AI across your chosen plan, right from Roblox Studio.",
+  },
+];
 
 function Cell({ value }: { value: CellValue }) {
   if (value === "yes") {
@@ -59,34 +80,95 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Provider disclosure */}
-      <section className="relative py-16 sm:py-20">
+      {/* Bring Your Own AI Provider */}
+      <section className="relative pb-4">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <ScrollReveal>
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-8 sm:p-10">
-              <h2 className="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
-                Your AI provider, your usage
-              </h2>
-              <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-[var(--text-secondary)]">
-                <p>
-                  Bricky AI plans provide access to Bricky AI&apos;s software
-                  and features.
-                </p>
-                <p>
-                  Supported AI provider usage may require you to connect or
-                  configure your own provider account or API access.
-                </p>
-                <p>
-                  OpenAI and Anthropic are separate third-party services and are
-                  not included in the Bricky AI subscription price unless
-                  explicitly stated otherwise.
-                </p>
-                <p>
-                  Provider fees, usage charges, rate limits, availability, and
-                  account requirements are determined by the applicable provider
-                  and may change independently of Bricky AI.
-                </p>
+            <div className="relative overflow-hidden rounded-3xl border border-[var(--accent-border)] bg-[var(--surface-raised)] p-8 sm:p-10">
+              <div className="pointer-events-none absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(255,120,71,0.12),transparent_60%)]" />
               </div>
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[var(--accent)]">
+                    <Cpu className="h-4 w-4" />
+                    The important bit
+                  </div>
+                  <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
+                    Bring Your Own AI Provider
+                  </h2>
+                  <p className="mt-3 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                    Bricky AI subscriptions provide access to the Bricky AI
+                    software and its features.{" "}
+                    <strong className="font-semibold text-[var(--accent)]">
+                      AI provider usage is separate.
+                    </strong>{" "}
+                    You need a supported AI provider configuration to use Bricky
+                    AI&apos;s AI-powered features. Provider fees, usage limits,
+                    availability, and account requirements are determined by the
+                    provider and are not included in your Bricky AI subscription.
+                  </p>
+                </div>
+                <a
+                  href="#providers"
+                  className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[var(--accent-border)] bg-[var(--accent-dim)] px-6 text-sm font-medium text-[var(--accent)] transition-all duration-200 hover:bg-[var(--accent)] hover:text-black"
+                >
+                  Learn more
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* How it works — providers */}
+      <section id="providers" className="relative scroll-mt-24 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <ScrollReveal className="mx-auto max-w-2xl text-center">
+            <div className="text-sm font-semibold uppercase tracking-widest text-[var(--accent)]">
+              How it works
+            </div>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
+              Three steps to start building.
+            </h2>
+          </ScrollReveal>
+
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            {PROVIDER_STEPS.map((step, i) => (
+              <ScrollReveal key={step.title} delay={i * 0.07} className="h-full">
+                <div className="relative h-full rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-dim)]">
+                      <step.icon className="h-5 w-5 text-[var(--accent)]" />
+                    </div>
+                    <span className="font-mono text-xs text-[var(--text-muted)]">{step.step}</span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-[var(--text-primary)]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                    {step.body}
+                  </p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          <ScrollReveal className="mt-10" delay={0.1}>
+            <div className="rounded-2xl border border-[var(--accent-border)] bg-[var(--accent-dim)] px-6 py-6 text-center">
+              <p className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+                Bricky AI subscription <span className="text-[var(--accent)]">≠</span>{" "}
+                AI provider subscription
+              </p>
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
+                Your Bricky AI plan covers the Bricky AI software and its
+                features. Connect a supported AI provider — for example, an
+                OpenAI or Anthropic provider API configuration. That
+                provider&apos;s fees, usage, and account requirements are
+                separate and billed by the provider. Implemented providers are
+                shown in the application.
+              </p>
             </div>
           </ScrollReveal>
         </div>

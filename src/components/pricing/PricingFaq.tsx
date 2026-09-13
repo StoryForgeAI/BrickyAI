@@ -7,16 +7,20 @@ import { ChevronDown } from "@/components/icons";
 
 const FAQS = [
   {
-    q: "Does my Bricky AI subscription include OpenAI or Anthropic API usage?",
-    a: "No. Bricky AI subscriptions cover access to Bricky AI's software and features. If your selected configuration uses a third-party AI provider, that provider's usage fees and account requirements are separate.",
+    q: "Do I need an AI provider?",
+    a: "Yes. Bricky AI's AI-powered features require a supported AI provider configuration. The provider and its usage costs are separate from your Bricky AI subscription.",
   },
   {
-    q: "Do I need my own AI provider?",
-    a: "Depending on the Bricky AI features and configuration you use, you may need to connect a supported provider account or API configuration. The available providers are shown in the application.",
+    q: "Does my Bricky AI subscription include OpenAI or Anthropic usage?",
+    a: "No. Your Bricky AI subscription provides access to Bricky AI's software features. Third-party AI provider usage is separate.",
   },
   {
-    q: "Is AI usage unlimited?",
-    a: "Not necessarily. Provider rate limits, Bricky AI technical limits, fair-use restrictions, and plan-specific limits may apply. See the Terms of Service for details.",
+    q: "Do I need ChatGPT Plus?",
+    a: "Not necessarily. Bricky AI uses supported provider configurations rather than treating a ChatGPT Plus subscription as a Bricky AI entitlement. Provider requirements depend on the integration currently supported by Bricky AI.",
+  },
+  {
+    q: "Can I use Bricky AI without a provider?",
+    a: "AI-powered features require a supported provider. Some non-AI functionality may remain available depending on the application version.",
   },
   {
     q: "Is there a free way to start?",
@@ -26,10 +30,6 @@ const FAQS = [
     q: "Can I cancel?",
     a: "Yes. You can manage or cancel your subscription through the available billing management interface. Cancellation and refund rights are subject to the applicable terms and mandatory consumer protection laws.",
   },
-  {
-    q: "Are OpenAI and Anthropic part of Bricky AI?",
-    a: "No. They are independent third-party providers. Bricky AI does not represent that it is affiliated with or endorsed by those providers.",
-  },
 ];
 
 export default function PricingFaq() {
@@ -37,7 +37,7 @@ export default function PricingFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="relative py-24 sm:py-32">
+    <section id="faq" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
           <div className="text-sm font-semibold uppercase tracking-widest text-[var(--accent)]">
