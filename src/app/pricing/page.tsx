@@ -275,8 +275,8 @@ export default function PricingPage() {
                   terms.
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-                  Applicable taxes may be calculated at checkout based on your
-                  location and applicable law.
+                  Applicable taxes, where they apply, will be calculated at checkout
+                  once online payment becomes available.
                 </p>
               </div>
             </ScrollReveal>

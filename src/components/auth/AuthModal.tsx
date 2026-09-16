@@ -196,6 +196,12 @@ export default function AuthModal({ open, onClose, error, onClearError }: AuthMo
                   </div>
 
                   <p className="text-center text-xs leading-relaxed text-[var(--text-muted)]">
+                    Authentication is provided through Google and handled
+                    securely by Supabase. See the Privacy Policy for what each
+                    of them processes.
+                  </p>
+
+                  <p className="text-center text-xs leading-relaxed text-[var(--text-muted)]">
                     If you already have a Bricky AI account linked to your Google,
                     you&apos;ll be signed back into it automatically.
                   </p>

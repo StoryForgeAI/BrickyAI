@@ -23,7 +23,7 @@ export default function CompanyInfo({ className = "" }: { className?: string }) 
       </div>
 
       <address className="mt-3 space-y-1.5 text-xs leading-relaxed text-[var(--text-secondary)] not-italic">
-        <p>Rapidline KKFT — {companyInfo.operatorCountry}</p>
+        <p>{companyInfo.operatorName} — {companyInfo.operatorCountry}</p>
         <p>
           Registered address: <span className="font-mono text-[11px]">{companyInfo.legalAddress}</span>
         </p>

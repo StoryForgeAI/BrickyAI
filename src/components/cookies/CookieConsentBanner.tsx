@@ -32,9 +32,10 @@ export default function CookieConsentBanner() {
                     Your privacy matters
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
-                    Bricky AI uses essential session storage to keep you signed in
-                    and a small preference to remember your choices. We do not use
-                    analytics or advertising cookies. Learn more in our{" "}
+Bricky AI uses essential session storage (a cookie and browser
+                    storage) to keep you signed in and to remember your consent,
+                    plus optional preferences only if you turn them on. We do not
+                    use analytics or advertising cookies. Learn more in our{" "}
                     <Link
                       href="/privacy"
                       className="font-semibold text-[var(--accent)] hover:text-[var(--accent-strong)]"

@@ -135,7 +135,8 @@ export default function CookieSettingsModal() {
                   Required for the site to work: the authentication session
                   storage needed to keep you signed in, remembering your consent
                   choice, safeguarding the one-time starter credit reward, and
-                  protecting the service. These cannot be turned off.
+                  protecting the service. Some of these are stored in a cookie
+                  and some in browser storage. They cannot be turned off.
                 </p>
               </div>
 
@@ -152,10 +153,11 @@ export default function CookieSettingsModal() {
                     onCheckedChange={setPrefs}
                   />
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-                  Lets us remember choices you make so you don&apos;t have to set
-                  them again. Off by default.
-                </p>
+<p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                    Available for optional features that remember choices you
+                    make so you don&apos;t have to set them again. No such
+                    feature is active today. Off by default.
+                  </p>
               </div>
 
               <div className="flex items-start gap-3 rounded-2xl border border-[var(--accent-border)] bg-[var(--accent-dim)] p-4">

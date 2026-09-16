@@ -22,7 +22,7 @@ const TOC = [
   { id: "sec-9", num: "9", label: "User ID" },
   { id: "sec-10", num: "10", label: "Subscription and credits" },
   { id: "sec-11", num: "11", label: "Technical and diagnostic data" },
-  { id: "sec-12", num: "12", label: "Payment information" },
+  { id: "sec-12", num: "12", label: "Payment information (not yet available)" },
   { id: "sec-13", num: "13", label: "Purposes of processing" },
   { id: "sec-14", num: "14", label: "Lawful bases for processing" },
   { id: "sec-15", num: "15", label: "Cookies and similar technology" },
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
     <LegalLayout
       eyebrow="Legal"
       title="Privacy Policy"
-      lastUpdated="September 6, 2026"
+      lastUpdated="September 16, 2026"
       intro={
         <>
           This Privacy Policy explains what information{" "}
@@ -132,10 +132,10 @@ export default function PrivacyPage() {
         <p>
           Bricky AI uses <strong>Google sign-in only</strong> — there is no
           email-and-password registration and we never receive a password from
-          you. When you create an account, sign in, or contact support, the
-          information we receive about you comes from your Google account and
-          from how you use the Service (such as messages to support and the
-          inputs you submit to AI features).
+          you. When you create an account or sign in, the information we
+          receive about you comes from your Google account and from how you
+          use the Service. AI-powered features, where available, are part of
+          the desktop application rather than the website.
         </p>
       </LegalSection>
 
@@ -149,9 +149,9 @@ export default function PrivacyPage() {
           profile email.
         </p>
         <p>
-          Your email address is used to identify your account and to send you
-          important service communications. We do not send you marketing emails
-          without your consent.
+          Your email address is used to identify your account and to associate
+          your account data (such as your credits and subscription status) with
+          you. We do not use it for marketing, and we do not sell it.
         </p>
       </LegalSection>
 
@@ -159,11 +159,14 @@ export default function PrivacyPage() {
         <p>
           Because &ldquo;Continue with Google&rdquo; is the{" "}
           <strong>only</strong> way to sign in, you always authenticate with
-          Google, a separate data controller. Google provides us with the
-          information you agreed to share — typically your email address and a
-          Google account identifier (and, depending on configuration, basic
-          profile information such as your name and profile picture). We store
-          this as your profile in your Bricky AI account.
+          Google, a separate data controller. By default, the Google scopes
+          configured for this project request your email address (and its
+          verification status) and a Google account identifier. Depending on
+          the exact scopes configured, Google may also make basic profile
+          information available (such as your name or profile picture), but
+          we only store your email address and its verification status as your
+          profile — we do not store a name, photo, or other Google profile
+          data.
         </p>
         <p>
           We do not receive or store your Google password. Google&apos;s own
@@ -196,10 +199,19 @@ export default function PrivacyPage() {
 
       <LegalSection id="sec-10" num="10" title="Subscription and credits">
         <p>
-          If you have a subscription or credits, we process the data needed to
-          operate them: subscription status, billing period, plan, usage
-          against your allowances, and purchase history. This data is linked to
-          your user ID and is used to provide the features you&nbsp;paid for.
+          Your credit balance and plan status are stored on your account and
+          managed server-side — the browser and desktop application can read
+          them but can never change them. New accounts receive a one-time
+          starter grant of 80 credits. Today the only plan in use is the Free
+          tier; paid subscriptions are not yet available (see{" "}
+          <a href="#sec-12">Section 12</a>).
+        </p>
+        <p>
+          If paid plans are introduced in the future, we may store the plan you
+          selected, its status and expiry, and usage against your allowances.
+          Any purchase or payment history would be limited to the confirmation
+          details the payment provider returns to us (see{" "}
+          <a href="#sec-12">Section 12</a>).
         </p>
       </LegalSection>
 
@@ -213,12 +225,19 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection id="sec-12" num="12" title="Payment information">
+      <LegalSection id="sec-12" num="12" title="Payment information (not yet available)">
         <p>
-          Bricky AI does not store your payment card number. Payments are
-          processed by third-party payment providers; they process payment
-          data under their own terms and privacy policies. Bricky AI receives
-          only the confirmation details needed to record your purchase.
+          Online payments are <strong>not yet available</strong>. The Service
+          does not currently collect, process, or store any payment
+          information, and nothing can be charged to you through it today.
+        </p>
+        <p>
+          If and when online checkout is introduced, payment processing will
+          be handled by a third-party payment provider. Bricky AI will not
+          store your full payment card number — the payment provider will
+          process payment data under its own terms and privacy policy, and we
+          will receive only the confirmation details needed to record a
+          purchase and operate your plan.
         </p>
       </LegalSection>
 
@@ -276,9 +295,12 @@ export default function PrivacyPage() {
       <LegalSection id="sec-15" num="15" title="Cookies and similar technology">
         <p>
           The Service relies on <strong>essential session technology</strong>{" "}
-          to keep you signed in and to make the website function — for example,
-          the small storage Supabase uses to hold your authentication session.
-          This is technically necessary and is not optional.
+          to keep you signed in and to make the website function. This is
+          technically necessary and is not optional. Note that the
+          authentication session Supabase holds is stored in your browser&apos;s
+          local storage rather than in a cookie (see{" "}
+          <a href="#sec-16">Section 16</a>); the only cookie the Service sets
+          is the device identifier described below.
         </p>
         <p>
           On your first visit, the site presents a cookie banner where you can
@@ -313,11 +335,33 @@ export default function PrivacyPage() {
 
       <LegalSection id="sec-16" num="16" title="Local storage">
         <p>
-          Your browser and the desktop application use local storage to keep
-          you signed in (Supabase&apos;s authentication session), to record your
-          cookie-consent choice, and to remember harmless preferences. This data
-          stays on your device and is not sent to us unless a feature you
-          actively use requires it.
+          Your browser stores a small amount of data on your device for
+          essential functions:
+        </p>
+        <ul>
+          <li>
+            <strong>Authentication session.</strong> Supabase keeps your
+            sign-in session in browser local storage (entries such as{" "}
+            <code>sb-&hellip;-auth-token</code>). This keeps you signed in and
+            identifies you to the API requests you make.
+          </li>
+          <li>
+            <strong>Consent record.</strong> Your cookie-consent choice is
+            stored in browser local storage (<code>bricky-consent</code>). It
+            is not sent to us.
+          </li>
+          <li>
+            <strong>Deferred action.</strong> A short-lived entry in browser
+            session storage (<code>bricky-auth-pending</code>) remembers which
+            action to continue after a sign-in round trip — for example, the
+            download you chose while signed out. It is cleared as soon as the
+            action runs or is cancelled.
+          </li>
+        </ul>
+        <p>
+          This data stays on your device unless a feature you actively use
+          transmits it — the authentication token is sent with API requests to
+          verify your session.
         </p>
       </LegalSection>
 
@@ -348,11 +392,13 @@ export default function PrivacyPage() {
 
       <LegalSection id="sec-19" num="19" title="Data sent to Bricky AI">
         <p>
-          When you use AI features, the inputs you submit are transmitted to us
-          and to the AI provider to generate a response. This includes your
-          prompts, the code or context you attach, and your account identifier
-          where needed for authentication. We keep these transmissions to the
-          minimum necessary to fulfill the request.
+          The website itself does not generate AI output. AI-powered features
+          run in the <strong>desktop application</strong>, and when you use
+          them, the inputs you submit are transmitted to us and to the AI
+          provider to generate a response. This includes your prompts, the code
+          or context you attach, and your account identifier where needed for
+          authentication. We keep these transmissions to the minimum necessary
+          to fulfill the request.
         </p>
       </LegalSection>
 
@@ -388,25 +434,43 @@ export default function PrivacyPage() {
           site. The rest of the Service uses hosting and infrastructure
           providers located in multiple regions.
         </p>
+        <p>
+          <strong>Desktop sign-in sessions.</strong> To let the desktop
+          application authenticate through your browser, we create a short-lived
+          one-time sign-in session in Supabase. It contains a unique request
+          identifier, the account it is bound to (your user ID, added only after
+          you approve the connection), and cryptographic hashes of the one-time
+          credential — never the credential itself. Sessions expire after about
+          10 minutes, can be used once, and are deleted automatically with your
+          account (see <a href="#sec-31">Section 31</a>).
+        </p>
       </LegalSection>
 
       <LegalSection id="sec-22" num="22" title="Other third-party providers">
         <p>
-          We use a small number of service providers to operate the Service
-          (for example, hosting, error monitoring, transactional email, and
-          payment processing). Each provider receives only the data needed to
-          perform its function and is contractually required to protect it.
+          Today the Service relies on three categories of provider:{" "}
+          <strong>Google</strong> (authentication via OAuth),{" "}
+          <strong>Supabase</strong> (authentication, account data, and the
+          database), and <strong>Vercel</strong> (website hosting). If we add
+          further providers in the future — for example, a payment processor or
+          an email service — we will update this policy, each provider will
+          receive only the data needed to perform its function, and its
+          processing will be covered by a data processing agreement. We do not
+          currently use analytics, error monitoring, or advertising services.
         </p>
       </LegalSection>
 
       <LegalSection id="sec-23" num="23" title="International data transfers">
         <p>
-          We and our providers operate in multiple countries, and your
-          information may be processed outside your country of residence. Where
-          we transfer personal information out of the EU/EEA or UK, we rely on
-          appropriate safeguards (such as the European Commission&apos;s
-          adequacy decisions or standard contractual clauses). You can ask for
-          details of the safeguards in place by contacting us.
+          We and our providers (including Google, Supabase, and Vercel) operate
+          in multiple countries, so your information may be processed outside
+          your country of residence. Where we transfer personal information out
+          of the EU/EEA or UK, we rely on the data processing agreements we
+          conclude with those providers, which include the safeguards needed for
+          such transfers — for example, the European Commission&apos;s standard
+          contractual clauses, or an adequacy decision where one applies to the
+          destination. You can ask for details of the safeguards in place by
+          contacting us.
         </p>
       </LegalSection>
 
@@ -416,8 +480,11 @@ export default function PrivacyPage() {
           purposes described in this policy or as required by law. Account data
           (including your email address) is kept while your account exists and
           is deleted when you delete your account, subject to the limited
-          exceptions in <a href="#sec-31">Section 31</a>. Logs and technical
-          data are retained briefly for security and troubleshooting.
+          exceptions in <a href="#sec-31">Section 31</a>. Desktop sign-in
+          sessions are kept only until they are used or expire (about 10
+          minutes) and are then no longer usable. Logs and technical data are
+          retained briefly for security and troubleshooting; backups and
+          infrastructure logs take time to cycle out.
         </p>
       </LegalSection>
 
@@ -501,7 +568,9 @@ export default function PrivacyPage() {
           You can delete your account (and the personal information associated
           with it) at any time from your account menu. The request is verified
           securely and the deletion is processed automatically against
-          Supabase, our account infrastructure provider.
+          Supabase, our account infrastructure provider. This includes any
+          desktop sign-in sessions bound to your account, which are removed
+          with it.
         </p>
         <div className="legal-callout">
           Where the law requires it, limited records may be kept after account

@@ -4,7 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
-import { siteConfig } from "@/lib/config";
+import { siteConfig, siteOrigin } from "@/lib/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  metadataBase: new URL(siteOrigin),
   title: "Bricky AI — AI Coding & Roblox Plugin Creator",
   description: siteConfig.description,
   keywords: [
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
-    url: siteConfig.url,
+    url: siteOrigin,
     title: "Bricky AI — AI Coding & Roblox Plugin Creator",
     description: siteConfig.description,
     siteName: siteConfig.name,

@@ -4,7 +4,7 @@
  * ---------------------------------------------------------------------------
  *  IMPORTANT — OWNER INPUT REQUIRED
  * ---------------------------------------------------------------------------
- *  Only the company name ("Rapidline KKFT") is known to this project.
+ *  Only the company name ("Rapidline Kft.") is known to this project.
  *  Every other field below is a clearly-marked placeholder. Replace the
  *  bracket tokens with the exact official details before going live.
  *
@@ -15,7 +15,7 @@
 
 export const companyInfo = {
   /** Service operator legal name. */
-  operatorName: "Rapidline KKFT",
+  operatorName: "Rapidline Kft.",
 
   /** Country of establishment / registration (used in legal text). */
   operatorCountry: "Hungary",

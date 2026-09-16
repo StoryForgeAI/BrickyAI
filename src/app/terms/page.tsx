@@ -64,7 +64,7 @@ export default function TermsPage() {
     <LegalLayout
       eyebrow="Legal"
       title="Terms of Service"
-      lastUpdated="September 6, 2026"
+      lastUpdated="September 16, 2026"
       intro={
         <>
           These Terms of Service (&ldquo;Terms&rdquo;) are a binding agreement between you
@@ -535,10 +535,17 @@ export default function TermsPage() {
 
       <LegalSection id="sec-26" num="26" title="Subscriptions">
         <p>
-          Some features of the Service may be available on a paid subscription
-          basis. Subscription plans and their features, including any usage
-          allowances or credit limits, are described at the point of purchase
-          and may change from time to time.
+          Paid subscriptions are <strong>not yet available</strong>: the
+          Service is currently free, online checkout is not live, and nothing
+          can be purchased or charged through it today. The paragraphs below
+          describe the terms that will apply when paid subscriptions are
+          introduced.
+        </p>
+        <p>
+          Some features of the Service may then be available on a paid
+          subscription basis. Subscription plans and their features, including
+          any usage allowances or credit limits, are described at the point of
+          purchase and may change from time to time.
         </p>
         <p>
           A subscription gives you access to the features included in the plan
@@ -560,15 +567,20 @@ export default function TermsPage() {
 
       <LegalSection id="sec-28" num="28" title="Payments and billing">
         <p>
-          If you purchase a subscription, pricing and billing terms are shown at
-          checkout. Payments are processed by third-party payment providers —
-          Bricky AI does not store your payment card number. By providing
-          payment details you agree to the applicable payment provider&apos;s
-          terms.
+          Online payment is <strong>not yet available</strong> — there is
+          currently no checkout, so nothing can be charged to you through the
+          Service (see <a href="#sec-26">Section 26</a>).
+        </p>
+        <p>
+          When online checkout is introduced, pricing and billing terms will be
+          shown at checkout. Payments will be processed by third-party payment
+          providers — Bricky AI will not store your payment card number. By
+          providing payment details you agree to the applicable payment
+          provider&apos;s terms.
         </p>
         <p>
           Prices may change for future billing periods with reasonable notice.
-          Where required by law, taxes are charged separately.
+          Where required by law, taxes may be charged separately.
         </p>
       </LegalSection>
 
