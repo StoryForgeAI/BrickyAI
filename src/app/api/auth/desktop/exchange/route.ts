@@ -226,11 +226,12 @@ export async function POST(request: Request) {
   const body = await parseBody(request);
   const admin = getServiceSupabaseClient();
 
-  // Legacy flow: { requestId, deviceSecret } from `/api/auth/desktop/start`.
-  const legacyRequestId =
-    typeof body?.requestId === "string" ? body.requestId.trim() : "";
-  const legacySecret =
-    typeof body?.deviceSecret === "string" ? body.deviceSecret.trim() : "";
+  // Primary flow: { requestId, deviceSecret } from `/api/auth/desktop/start`.
+  // (snake_case field names accepted too for desktop-app integration leniency)
+  const rawRequestId = body?.requestId ?? body?.["request_id"];
+  const rawLegacySecret = body?.deviceSecret ?? body?.device_secret;
+  const legacyRequestId = typeof rawRequestId === "string" ? rawRequestId.trim() : "";
+  const legacySecret = typeof rawLegacySecret === "string" ? rawLegacySecret.trim() : "";
   if (legacyRequestId && legacySecret) {
     const row = await readRowBy(admin, "request_id", legacyRequestId);
     if (!row) return invalidResponse();
@@ -249,7 +250,7 @@ export async function POST(request: Request) {
     row = await ensurePendingRow(admin, code, codeHash);
     if (!row) {
       return NextResponse.json(
-        { error: "We couldn't start the sign-in right now. Please try again." },
+        { error: "Bricky AI couldn't complete the sign-in right now. Please try again." },
         { status: 500 }
       );
     }

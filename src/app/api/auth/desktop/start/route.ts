@@ -72,13 +72,13 @@ export async function POST() {
     if (insertError.code === "23505") continue;
 
     return NextResponse.json(
-      { error: "We couldn't start the sign-in right now. Please try again." },
+      { error: "Bricky AI couldn't start the sign-in right now. Please try again." },
       { status: 500 }
     );
   }
 
   return NextResponse.json(
-    { error: "We couldn't start the sign-in right now. Please try again." },
+    { error: "Bricky AI couldn't start the sign-in right now. Please try again." },
     { status: 500 }
   );
 }

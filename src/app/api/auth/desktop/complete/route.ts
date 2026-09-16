@@ -204,8 +204,9 @@ export async function POST(request: Request) {
   const userId = authData.user.id;
 
   const body = await parseBody(request);
+  const rawRequestId = body?.requestId ?? body?.["request_id"];
   const requestIdValue =
-    typeof body?.requestId === "string" ? body.requestId.trim() : "";
+    typeof rawRequestId === "string" ? rawRequestId.trim() : "";
   const presentedCode = typeof body?.code === "string" ? body.code.trim() : "";
 
   // Code-based flow: the browser carries the app's code.
@@ -219,7 +220,7 @@ export async function POST(request: Request) {
       row = await ensurePendingRow(admin, presentedCode, codeHash);
       if (!row) {
         return NextResponse.json(
-          { error: "We couldn't start the sign-in right now. Please try again." },
+          { error: "Bricky AI couldn't complete the sign-in right now. Please try again." },
           { status: 500 }
         );
       }
