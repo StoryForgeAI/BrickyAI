@@ -10,12 +10,20 @@ import { authRedirectTo } from "@/lib/oauth";
 import { useAuth } from "@/context/AuthContext";
 import {
   DESKTOP_AUTH_ERRORS,
+  isWellFormedDesktopCode,
   type DesktopAuthErrorCode,
 } from "@/lib/desktopAuth";
 import { Check, GoogleG, Logo, Spinner } from "@/components/icons";
 
 interface DesktopAuthClientProps {
+  /**
+   * The identifier the browser page was opened with. For the code-based flow
+   * this is the app-generated code itself; for the legacy flow it is the
+   * `request_id` from `/api/auth/desktop/start`.
+   */
   requestId: string | null;
+  /** True when `requestId` is the app-generated code (`?code=…` / `?desktop_code=…`). */
+  codeFlow: boolean;
 }
 
 /** Safe, human-readable error for the Google OAuth step (never raw errors). */
@@ -52,7 +60,7 @@ function connectionErrorText(
   }
 }
 
-export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps) {
+export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthClientProps) {
   const reduce = useReducedMotion();
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -67,6 +75,10 @@ export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps)
   const configured = isSupabaseConfigured;
   const supabase = isSupabaseConfigured ? getBrowserSupabaseClient() : null;
   const missingId = !requestId;
+  // A code flow with a malformed credential is invalid up front: the server
+  // rejects it too, but failing fast avoids a pointless Google round-trip.
+  const malformedCode =
+    codeFlow && requestId ? !isWellFormedDesktopCode(requestId) : false;
 
   // Detect a failed Google round-trip (`?error=...` set by Supabase) and show a
   // friendly inline message instead of a raw error. The global auth modal does
@@ -120,7 +132,9 @@ export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps)
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ requestId }),
+          body: JSON.stringify(
+            codeFlow ? { requestId, code: requestId } : { requestId }
+          ),
         });
         const body = (await res.json().catch(() => null)) as {
           ok?: boolean;
@@ -148,14 +162,18 @@ export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps)
     return () => {
       active = false;
     };
-  }, [supabase, missingId, requestId, user?.id, router]);
+  }, [supabase, missingId, requestId, codeFlow, user?.id, router]);
 
   const handleGoogle = async () => {
     if (!supabase) return;
     setSubmitting(true);
     setUrlError(null);
     try {
-      const target = `/auth/desktop${requestId ? `?request_id=${encodeURIComponent(requestId)}` : ""}`;
+      const target = codeFlow
+        ? `/auth/desktop?desktop_code=${encodeURIComponent(requestId ?? "")}`
+        : requestId
+          ? `/auth/desktop?request_id=${encodeURIComponent(requestId)}`
+          : "/auth/desktop";
       const redirectTo = authRedirectTo(target);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -180,8 +198,9 @@ export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps)
     }
   };
 
-  let view: "unconfigured" | "missing" | "preparing" | "signin" | "connecting" | "done" | "error";
+  let view: "unconfigured" | "missing" | "invalid" | "preparing" | "signin" | "connecting" | "done" | "error";
   if (!configured) view = "unconfigured";
+  else if (malformedCode) view = "invalid";
   else if (missingId) view = "missing";
   else if (loading) view = "preparing";
   else if (connectDone) view = "done";
@@ -235,6 +254,26 @@ export default function DesktopAuthClient({ requestId }: DesktopAuthClientProps)
                   <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                     This sign-in link is missing its request. Launch the Bricky
                     AI desktop app and choose &quot;Continue with Google&quot; there.
+                  </p>
+                  <Link
+                    href="/"
+                    className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-6 text-sm font-semibold text-black transition-colors hover:bg-[var(--accent-strong)]"
+                  >
+                    Return to Bricky AI
+                  </Link>
+                </div>
+              )}
+
+              {view === "invalid" && (
+                <div className="flex flex-col items-center text-center">
+                  <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                    Sign-in link invalid
+                  </h1>
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                    {connectionErrorText(
+                      DESKTOP_AUTH_ERRORS.INVALID_REQUEST,
+                      "This sign-in request is invalid or no longer available. Please close this window and start again from the Bricky AI desktop app."
+                    )}
                   </p>
                   <Link
                     href="/"

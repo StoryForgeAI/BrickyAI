@@ -1,15 +1,32 @@
 import { NextResponse } from "next/server";
-import { isSecretConfigured, getServiceSupabaseClient } from "@/lib/supabase/server";
-import { DESKTOP_AUTH_ERRORS } from "@/lib/desktopAuth";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  isSecretConfigured,
+  getServiceSupabaseClient,
+} from "@/lib/supabase/server";
+import {
+  DESKTOP_AUTH_ERRORS,
+  DESKTOP_AUTH_TTL_SECONDS,
+  isWellFormedDesktopCode,
+} from "@/lib/desktopAuth";
+import { hashDesktopSecret } from "@/lib/desktopAuthServer";
 
 /**
  * Binds an in-flight desktop sign-in request to the browser-authenticated
  * user.
  *
- * Called from `/auth/desktop` with a validated Supabase access token. The
- * request row was created as `pending` by `/api/auth/desktop/start`; this
- * route marks it `bound` to the user's id. Only after this can the desktop
- * app redeem the one-time code at `/api/auth/desktop/exchange`.
+ * Called from `/auth/desktop` with a validated Supabase access token. Two
+ * payloads are accepted:
+ *
+ *  - Code-based flow (primary): `{ requestId, code }` where `requestId` IS the
+ *    code carried in the `/auth/desktop?code=…` URL. The row is located by the
+ *    code's SHA-256 hash, created as `pending` if it does not exist yet (an
+ *    early exchange poll from the app may have raced the page load).
+ *  - Legacy flow: `{ requestId }` for a row created by
+ *    `/api/auth/desktop/start`.
+ *
+ * This marks the row `bound` to the user id; only then can the desktop app
+ * redeem the one-time code at `/api/auth/desktop/exchange`.
  *
  * The binding is atomic (guarded UPDATE), so two browser tabs cannot bind the
  * same request to different accounts. Rebinding the SAME account is idempotent
@@ -29,8 +46,137 @@ interface DesktopAuthRow {
   used_at: string | null;
 }
 
-function parseBody(request: Request): Promise<{ requestId?: string } | null> {
+type DesktopAuthLookupColumn = "request_id" | "code_hash" | "id";
+
+function parseBody(request: Request): Promise<Record<string, unknown> | null> {
   return request.json().catch(() => null);
+}
+
+async function readRowBy(
+  admin: SupabaseClient,
+  column: DesktopAuthLookupColumn,
+  value: string
+): Promise<DesktopAuthRow | null> {
+  const { data } = await admin
+    .from("desktop_auth_sessions")
+    .select("*")
+    .eq(column, value)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  const rows = data as DesktopAuthRow[] | null;
+  return rows?.[0] ?? null;
+}
+
+/**
+ * Registers a desktop session as `pending` when no row exists yet. Used by the
+ * code-based flow: the browser may be the first actor to touch a fresh code.
+ * Idempotent — a concurrent insert (e.g. an exchange poll) that already created
+ * the row is not a failure.
+ */
+async function ensurePendingRow(
+  admin: SupabaseClient,
+  requestId: string,
+  codeHash: string
+): Promise<DesktopAuthRow | null> {
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + DESKTOP_AUTH_TTL_SECONDS * 1000);
+  const { error: insertError } = await admin.from("desktop_auth_sessions").insert({
+    request_id: requestId,
+    code_hash: codeHash,
+    status: "pending",
+    created_at: now.toISOString(),
+    expires_at: expiresAt.toISOString(),
+  });
+  if (insertError && insertError.code !== "23505") return null;
+  return readRowBy(admin, "code_hash", codeHash);
+}
+
+function invalidRequestResponse() {
+  return NextResponse.json(
+    {
+      error: "This sign-in request is missing or invalid.",
+      code: DESKTOP_AUTH_ERRORS.INVALID_REQUEST,
+    },
+    { status: 400 }
+  );
+}
+
+function expiredResponse() {
+  return NextResponse.json(
+    {
+      error: "This sign-in request has expired. Please start again from the Bricky AI desktop app.",
+      code: DESKTOP_AUTH_ERRORS.EXPIRED,
+    },
+    { status: 410 }
+  );
+}
+
+function alreadyUsedResponse() {
+  return NextResponse.json(
+    {
+      error: "This sign-in request has already been used once.",
+      code: DESKTOP_AUTH_ERRORS.ALREADY_USED,
+    },
+    { status: 410 }
+  );
+}
+
+function evaluateBind(row: DesktopAuthRow, userId: string): NextResponse {
+  if (new Date(row.expires_at).getTime() <= Date.now() || row.status === "expired") {
+    return expiredResponse();
+  }
+  if (row.status === "bound" || row.status === "redeemed") {
+    if (row.user_id === userId) {
+      // Same user reloading the page after the handshake — treat as success so
+      // the browser never gets stuck on the sign-in page.
+      return NextResponse.json({ ok: true });
+    }
+    if (row.status === "bound") {
+      return NextResponse.json(
+        {
+          error: "This sign-in request is already connected to another Google account.",
+          code: DESKTOP_AUTH_ERRORS.ALREADY_BOUND,
+        },
+        { status: 409 }
+      );
+    }
+    return alreadyUsedResponse();
+  }
+  return invalidRequestResponse();
+}
+
+async function attemptBind(
+  admin: SupabaseClient,
+  row: DesktopAuthRow,
+  userId: string
+): Promise<NextResponse> {
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    await admin
+      .from("desktop_auth_sessions")
+      .update({ status: "expired" })
+      .eq("id", row.id)
+      .eq("status", "pending");
+    return expiredResponse();
+  }
+
+  if (row.status === "pending") {
+    const { data: bound, error: bindError } = await admin
+      .from("desktop_auth_sessions")
+      .update({ user_id: userId, status: "bound", bound_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+    if (!bindError && bound) {
+      return NextResponse.json({ ok: true });
+    }
+    // Lost a race with another tab — re-evaluate the current state below.
+    const fresh = await readRowBy(admin, "id", row.id);
+    if (fresh) return evaluateBind(fresh, userId);
+    return invalidRequestResponse();
+  }
+
+  return evaluateBind(row, userId);
 }
 
 export async function POST(request: Request) {
@@ -58,90 +204,36 @@ export async function POST(request: Request) {
   const userId = authData.user.id;
 
   const body = await parseBody(request);
-  const requestId = body?.requestId?.trim();
-  if (!requestId) {
-    return NextResponse.json(
-      { error: "This sign-in request is missing or invalid.", code: DESKTOP_AUTH_ERRORS.INVALID_REQUEST },
-      { status: 400 }
-    );
+  const requestIdValue =
+    typeof body?.requestId === "string" ? body.requestId.trim() : "";
+  const presentedCode = typeof body?.code === "string" ? body.code.trim() : "";
+
+  // Code-based flow: the browser carries the app's code.
+  if (presentedCode) {
+    if (!requestIdValue || requestIdValue !== presentedCode || !isWellFormedDesktopCode(presentedCode)) {
+      return invalidRequestResponse();
+    }
+    const codeHash = hashDesktopSecret(presentedCode);
+    let row = await readRowBy(admin, "code_hash", codeHash);
+    if (!row) {
+      row = await ensurePendingRow(admin, presentedCode, codeHash);
+      if (!row) {
+        return NextResponse.json(
+          { error: "We couldn't start the sign-in right now. Please try again." },
+          { status: 500 }
+        );
+      }
+    }
+    return attemptBind(admin, row, userId);
   }
 
-  const { data: rowData } = await admin
-    .from("desktop_auth_sessions")
-    .select("*")
-    .eq("request_id", requestId)
-    .maybeSingle();
-  const row = (rowData ?? null) as DesktopAuthRow | null;
+  // Legacy request_id flow: the row was pre-created by `/api/auth/desktop/start`.
+  if (!requestIdValue) {
+    return invalidRequestResponse();
+  }
+  const row = await readRowBy(admin, "request_id", requestIdValue);
   if (!row) {
-    return NextResponse.json(
-      { error: "This sign-in request is invalid or no longer available.", code: DESKTOP_AUTH_ERRORS.INVALID_REQUEST },
-      { status: 400 }
-    );
+    return invalidRequestResponse();
   }
-
-  const expired = new Date(row.expires_at).getTime() <= Date.now();
-  if (expired) {
-    await admin.from("desktop_auth_sessions").update({ status: "expired" }).eq("id", row.id).eq("status", "pending");
-    return NextResponse.json(
-      { error: "This sign-in request has expired. Please start again from the Bricky AI desktop app.", code: DESKTOP_AUTH_ERRORS.EXPIRED },
-      { status: 410 }
-    );
-  }
-
-  if (row.status === "pending") {
-    const { data: bound, error: bindError } = await admin
-      .from("desktop_auth_sessions")
-      .update({ user_id: userId, status: "bound", bound_at: new Date().toISOString() })
-      .eq("id", row.id)
-      .eq("status", "pending")
-      .select("id")
-      .maybeSingle();
-    if (!bindError && bound) {
-      return NextResponse.json({ ok: true });
-    }
-    // Lost a race with another tab — re-evaluate the current state below.
-    const { data: freshData } = await admin
-      .from("desktop_auth_sessions")
-      .select("*")
-      .eq("id", row.id)
-      .maybeSingle();
-    const fresh = (freshData ?? null) as DesktopAuthRow | null;
-    if (fresh) return evaluateBind(fresh, userId);
-    return NextResponse.json(
-      { error: "This sign-in request is invalid or no longer available.", code: DESKTOP_AUTH_ERRORS.INVALID_REQUEST },
-      { status: 400 }
-    );
-  }
-
-  return evaluateBind(row, userId);
-}
-
-function evaluateBind(row: DesktopAuthRow, userId: string): NextResponse {
-  if (new Date(row.expires_at).getTime() <= Date.now() || row.status === "expired") {
-    return NextResponse.json(
-      { error: "This sign-in request has expired. Please start again from the Bricky AI desktop app.", code: DESKTOP_AUTH_ERRORS.EXPIRED },
-      { status: 410 }
-    );
-  }
-  if (row.status === "bound" || row.status === "redeemed") {
-    if (row.user_id === userId) {
-      // Same user reloading the page after the handshake — treat as success so
-      // the browser never gets stuck on the sign-in page.
-      return NextResponse.json({ ok: true });
-    }
-    if (row.status === "bound") {
-      return NextResponse.json(
-        { error: "This sign-in request is already connected to another Google account.", code: DESKTOP_AUTH_ERRORS.ALREADY_BOUND },
-        { status: 409 }
-      );
-    }
-    return NextResponse.json(
-      { error: "This sign-in request has already been used.", code: DESKTOP_AUTH_ERRORS.ALREADY_USED },
-      { status: 410 }
-    );
-  }
-  return NextResponse.json(
-    { error: "This sign-in request is invalid or no longer available.", code: DESKTOP_AUTH_ERRORS.INVALID_REQUEST },
-    { status: 400 }
-  );
+  return attemptBind(admin, row, userId);
 }
