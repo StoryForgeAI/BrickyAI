@@ -2,12 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Session, User } from "@supabase/supabase-js";
-import { getBrowserSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isBrickyApiConfigured } from "@/lib/config";
 import { WINDOWS_DOWNLOAD_URL, PLUGIN_DOWNLOAD_URL } from "@/lib/config";
-import type { Profile } from "@/lib/profile";
-import { claimStarterCredits } from "@/lib/credit";
-import AuthModal from "@/components/auth/AuthModal";
+import type { BrickyAccount } from "@/lib/bricky-api";
 
 /**
  * A deferred action that runs after a successful sign-in. Only JSON-serializable
@@ -18,34 +15,29 @@ export type AuthPendingAction =
   | { type: "navigate-download" }
   | { type: "download-windows" }
   | { type: "download-plugin" }
-  | { type: "navigate-pricing" };
+  | { type: "navigate-pricing" }
+  | { type: "navigate-dashboard" };
 
 const PENDING_STORAGE_KEY = "bricky-auth-pending";
 
 interface AuthContextValue {
-  /** Whether Supabase environment variables are configured for this deployment. */
+  /** Whether a Bricky AI backend URL is configured for this deployment. */
   configured: boolean;
   /** True while the persisted session is being restored after load. */
   loading: boolean;
-  user: User | null;
-  session: Session | null;
-  /** The signed-in user's `profiles` row (read-only; credits/subscription are server-managed). */
-  profile: Profile | null;
-  /** Open the auth (Google-only) modal. */
-  openAuth: () => void;
-  /** Close the modal and cancel any deferred action stored by `requireAuth`. */
-  closeAuth: () => void;
-  isOpen: boolean;
-  /** Friendly, user-presentable error message (never raw backend errors). */
-  error: string | null;
-  clearError: () => void;
+  /** The signed-in account (read-only; credits/subscription are server-managed). */
+  account: BrickyAccount | null;
   signOut: () => Promise<void>;
+  /** Force-refresh the account snapshot from `/api/account`. */
+  refreshAccount: () => Promise<void>;
   /**
    * Ensure the user is signed in before an action. If signed in, runs the
-   * action immediately; otherwise stores it as pending and opens the modal so
-   * it can run right after authentication.
+   * action immediately; otherwise stores it as pending and redirects to
+   * /login so it can run right after authentication.
    */
   requireAuth: (action: AuthPendingAction) => void;
+  /** Run a pending action stored before a sign-in redirect (used by /login). Returns true when one ran. */
+  runStoredPendingAction: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,22 +56,16 @@ function readStoredPending(): AuthPendingAction | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  // When Supabase isn't configured there is nothing to restore, so loading is
-  // false from the start.
-  const [loading, setLoading] = useState(() => !isSupabaseConfigured);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // When the backend isn't configured there is nothing to restore, so loading
+  // is false from the start.
+  const [loading, setLoading] = useState(() => !isBrickyApiConfigured);
+  const [account, setAccount] = useState<BrickyAccount | null>(null);
   const pendingRef = useRef<AuthPendingAction | null>(null);
-  // Tokens for which the one-time starter-credit claim was already attempted
-  // this page lifetime. Keys off the access token so a fresh session retries.
-  const starterClaimedRef = useRef<Set<string>>(new Set());
-  // Bumped after a successful claim so the read-only profile is re-fetched.
-  const [profileVersion, setProfileVersion] = useState(0);
-
-  const supabase = isSupabaseConfigured ? getBrowserSupabaseClient() : null;
+  // Accounts for which the one-time starter-credit claim was already attempted
+  // this page lifetime. Keys off the account id so a fresh sign-in retries.
+  const starterClaimedRef = useRef<Set<number>>(new Set());
+  // Bumped after a successful claim so the account snapshot is re-fetched.
+  const [accountVersion, setAccountVersion] = useState(0);
 
   const getPending = useCallback((): AuthPendingAction | null => {
     return pendingRef.current ?? readStoredPending();
@@ -109,182 +95,153 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       if (action.type === "download-windows") startDownload(WINDOWS_DOWNLOAD_URL);
       else if (action.type === "download-plugin") startDownload(PLUGIN_DOWNLOAD_URL);
-      else if (action.type === "navigate-download" || action.type === "navigate-pricing")
-        router.push(action.type === "navigate-download" ? "/download" : "/pricing");
+      else if (
+        action.type === "navigate-download" ||
+        action.type === "navigate-pricing" ||
+        action.type === "navigate-dashboard"
+      ) {
+        const href =
+          action.type === "navigate-download"
+            ? "/download"
+            : action.type === "navigate-pricing"
+              ? "/pricing"
+              : "/dashboard";
+        router.push(href);
+      }
       storePending(null);
     },
     [router, storePending]
   );
 
+  // Restore the session cookie against the backend on load.
   useEffect(() => {
-    if (!supabase) return;
-
-    let active = true;
-
-    const restore = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-
-      // Detect a failed OAuth redirect (e.g. the user cancelled at Google).
-      // Skipped on the desktop-app sign-in page, which renders its own inline
-      // error state instead of the site-wide modal (see DesktopAuthClient).
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("error") && window.location.pathname !== "/auth/desktop") {
-        setError("Google sign-in was cancelled or could not be completed. Please try again.");
-        setIsOpen(true);
-        window.history.replaceState({}, "", window.location.pathname);
-      }
-    };
-
-    void restore();
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, changedSession) => {
-      if (event === "INITIAL_SESSION") {
-        setSession(changedSession);
-        setUser(changedSession?.user ?? null);
-        setLoading(false);
-        // After a Google OAuth round-trip the library swaps the PKCE code for a
-        // session on this page load and emits INITIAL_SESSION. Run a deferred
-        // action that was set before the redirect (e.g. "download this file").
-        if (changedSession) {
-          const stored = getPending();
-          if (stored) runAction(stored);
-        }
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-        setSession(changedSession);
-        setUser(changedSession?.user ?? null);
-      } else if (event === "SIGNED_OUT") {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-      }
-    });
-
-    return () => {
-      active = false;
-      subscription.subscription.unsubscribe();
-    };
-  }, [supabase, runAction, getPending]);
-
-  // Once per session, ask the server for the one-time starter-credit
-  // entitlement. The server decides (validated session, HttpOnly device cookie,
-  // atomic claim in Postgres) and the balance is re-read below; the client
-  // never writes or computes credits. Failed transport attempts are retried on
-  // the next session refresh instead of being permanently marked done.
-  useEffect(() => {
-    if (!supabase || !session?.access_token) return;
-    const token = session.access_token;
-    if (starterClaimedRef.current.has(token)) return;
-    starterClaimedRef.current.add(token);
+    if (!isBrickyApiConfigured) return;
     let active = true;
     void (async () => {
-      const result = await claimStarterCredits();
-      if (!active) return;
-      if (result.ok) {
-        // Claim consumed or already claimed — refresh the balance so the UI
-        // shows the server-computed value (e.g. 80 on first sign-in).
-        setProfileVersion((v) => v + 1);
-      } else {
-        // Transport failure only — allow a retry on the next session event.
-        starterClaimedRef.current.delete(token);
+      try {
+        const res = await fetch("/api/auth/session");
+        const body = (await res.json()) as { authenticated?: boolean; account?: BrickyAccount | null };
+        if (!active) return;
+        if (body.authenticated && body.account) setAccount(body.account);
+      } catch {
+        /* offline — stay signed out; a refresh will retry */
+      } finally {
+        if (active) setLoading(false);
       }
     })();
     return () => {
       active = false;
     };
-  }, [supabase, session?.access_token]);
-
-  // Fetch the signed-in user's read-only `profiles` row whenever the auth user
-  // changes. The browser uses its own user ID only for the SELECT (the fetch is
-  // scoped to the authenticated user), and credits/subscription remain
-  // server-managed values — the client never writes them. The profile is
-  // cleared in the sign-out handlers below, not via setState in this effect.
-  useEffect(() => {
-    if (!supabase || !user?.id) return;
-    let active = true;
-    void (async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (!active) return;
-      if (error) {
-        setProfile(null);
-      } else {
-        setProfile((data as Profile | null) ?? null);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [supabase, user?.id, profileVersion]);
-
-  const openAuth = useCallback(() => {
-    setError(null);
-    setIsOpen(true);
   }, []);
 
-  const closeAuth = useCallback(() => {
-    setIsOpen(false);
-    setError(null);
-    storePending(null);
-  }, [storePending]);
+  // Once per session, ask the server for the one-time starter-credit
+  // entitlement. The server decides (validated JWT, HttpOnly device cookie,
+  // atomic claim in WordPress) and the balance is re-read below; the client
+  // never writes or computes credits. Failed transport attempts are retried on
+  // the next account change instead of being permanently marked done.
+  useEffect(() => {
+    if (!isBrickyApiConfigured || !account?.id) return;
+    const id = account.id;
+    if (starterClaimedRef.current.has(id)) return;
+    starterClaimedRef.current.add(id);
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/credit/claim-starter", { method: "POST" });
+        const body = (await res.json()) as { granted?: boolean };
+        if (!active) return;
+        if (body.granted) {
+          // 80 credits granted — refresh the balance so the UI shows the
+          // server-computed value immediately.
+          setAccountVersion((v) => v + 1);
+        }
+      } catch {
+        // Transport failure only — allow a retry on the next account change.
+        starterClaimedRef.current.delete(id);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBrickyApiConfigured, account?.id]);
 
-  const clearError = useCallback(() => setError(null), []);
+  // Re-fetch the authoritative account snapshot (balance, subscription, etc.)
+  // whenever it changes or the claim effect bumps the version.
+  useEffect(() => {
+    if (!isBrickyApiConfigured || !account?.id) return;
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/account");
+        const body = (await res.json()) as { ok?: boolean; account?: BrickyAccount | null };
+        if (!active) return;
+        if (body.ok && body.account) setAccount(body.account);
+      } catch {
+        /* keep the current snapshot on transport failure */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBrickyApiConfigured, account?.id, accountVersion]);
+
+  const refreshAccount = useCallback(async () => {
+    if (!isBrickyApiConfigured) return;
+    try {
+      const res = await fetch("/api/account");
+      const body = (await res.json()) as { ok?: boolean; account?: BrickyAccount | null };
+      if (body.ok && body.account) setAccount(body.account);
+    } catch {
+      /* keep the current snapshot */
+    }
+  }, []);
 
   const signOut = useCallback(async () => {
     storePending(null);
-    if (supabase) await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-  }, [supabase, storePending]);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      /* session cookie still cleared server-side below via the route itself */
+    }
+    setAccount(null);
+  }, [storePending]);
 
   const requireAuth = useCallback(
     (action: AuthPendingAction) => {
-      if (user) {
+      if (account) {
         runAction(action);
         return;
       }
       storePending(action);
-      openAuth();
+      const path = window.location.pathname + window.location.search;
+      router.push(`/login?redirect=${encodeURIComponent(path)}`);
     },
-    [user, runAction, storePending, openAuth]
+    [account, runAction, storePending, router]
   );
+
+  const runStoredPendingAction = useCallback(() => {
+    const action = getPending();
+    if (!action) return false;
+    runAction(action);
+    return true;
+  }, [runAction, getPending]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      configured: isSupabaseConfigured,
+      configured: isBrickyApiConfigured,
       loading,
-      user,
-      session,
-      profile,
-      openAuth,
-      closeAuth,
-      isOpen,
-      error,
-      clearError,
+      account,
       signOut,
+      refreshAccount,
       requireAuth,
+      runStoredPendingAction,
     }),
-    [loading, user, session, profile, openAuth, closeAuth, isOpen, error, clearError, signOut, requireAuth]
+    [loading, account, signOut, refreshAccount, requireAuth, runStoredPendingAction]
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-      <AuthModal
-        open={isOpen}
-        onClose={closeAuth}
-        error={error}
-        onClearError={clearError}
-      />
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

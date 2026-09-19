@@ -25,7 +25,7 @@ const cards = [
           </p>
         </ScrollReveal>
 
-        <div className="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((card, i) => (
             <ScrollReveal key={card.name} delay={i * 0.06} className={i === 2 ? "sm:col-span-2 lg:col-span-1" : ""}>
               <div className="h-full rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] px-6 py-6 text-center">

@@ -4,9 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { AuthError } from "@supabase/supabase-js";
-import { getBrowserSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { authRedirectTo } from "@/lib/oauth";
+import { startGoogleFlow } from "@/lib/social-auth";
 import { useAuth } from "@/context/AuthContext";
 import {
   DESKTOP_AUTH_ERRORS,
@@ -26,21 +24,6 @@ interface DesktopAuthClientProps {
   codeFlow: boolean;
 }
 
-/** Safe, human-readable error for the Google OAuth step (never raw errors). */
-function friendlyOAuthError(err: AuthError | null): string {
-  if (!err) return "Something went wrong. Please try again.";
-  const code = err.code ?? err.message;
-  if (/rate_limit|over_email_send_rate_limit/i.test(code))
-    return "Too many requests. Please wait a moment and try again.";
-  if (/provider_is_not_enabled|provider_disabled|disabled/i.test(code))
-    return "Google sign-in isn't enabled for this project yet. It can be enabled by the operator in Supabase.";
-  if (/network|fetch|failed to fetch|timeout|unable to connect/i.test(code))
-    return "Network error. Check your connection and try again.";
-  if (/access_denied|cancelled|canceled/i.test(code))
-    return "Google sign-in was cancelled. You can retry whenever you're ready.";
-  return "Something went wrong. Please try again.";
-}
-
 function connectionErrorText(
   code: DesktopAuthErrorCode | undefined,
   fallback: string
@@ -51,7 +34,7 @@ function connectionErrorText(
     case DESKTOP_AUTH_ERRORS.ALREADY_USED:
       return "This sign-in request has already been used. Please close this window and start again from the Bricky AI desktop app.";
     case DESKTOP_AUTH_ERRORS.ALREADY_BOUND:
-      return "This sign-in request is already connected to another Google account. Please close this window and start again from the Bricky AI desktop app.";
+      return "This sign-in request is already connected to another account. Please close this window and start again from the Bricky AI desktop app.";
     case DESKTOP_AUTH_ERRORS.INVALID:
     case DESKTOP_AUTH_ERRORS.INVALID_REQUEST:
       return "This sign-in request is invalid or no longer available. Please close this window and start again from the Bricky AI desktop app.";
@@ -63,7 +46,7 @@ function connectionErrorText(
 export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthClientProps) {
   const reduce = useReducedMotion();
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { account, loading, configured } = useAuth();
 
   const [urlError, setUrlError] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
@@ -72,32 +55,11 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
   const completeAttemptedRef = useRef<Set<string>>(new Set());
   const redirectTimerRef = useRef<number | null>(null);
 
-  const configured = isSupabaseConfigured;
-  const supabase = isSupabaseConfigured ? getBrowserSupabaseClient() : null;
   const missingId = !requestId;
   // A code flow with a malformed credential is invalid up front: the server
   // rejects it too, but failing fast avoids a pointless Google round-trip.
   const malformedCode =
     codeFlow && requestId ? !isWellFormedDesktopCode(requestId) : false;
-
-  // Detect a failed Google round-trip (`?error=...` set by Supabase) and show a
-  // friendly inline message instead of a raw error. The global auth modal does
-  // not open on this page (see AuthContext), so we surface it here. The error
-  // message is deferred out of the render so the toggling happens off-render.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (!params.get("error")) return;
-    const message =
-      params.get("error") === "access_denied"
-        ? "Google sign-in was cancelled. You can retry whenever you're ready."
-        : "Google sign-in could not be completed. Please try again.";
-    const t = window.setTimeout(() => setUrlError(message), 0);
-    params.delete("error");
-    const qs = params.toString();
-    window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-    return () => window.clearTimeout(t);
-  }, [requestId]);
 
   // Clear the redirect timer if the page unmounts before it fires.
   useEffect(() => {
@@ -111,30 +73,18 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
   // Once signed in, bind the desktop handshake to this user (server-side) and
   // then return to the normal Bricky AI home page.
   useEffect(() => {
-    if (!supabase || missingId || !requestId || !user?.id) return;
-    const key = `${requestId}:${user.id}`;
+    if (missingId || !requestId || !account?.id) return;
+    const key = `${requestId}:${account.id}`;
     if (completeAttemptedRef.current.has(key)) return;
     completeAttemptedRef.current.add(key);
 
     let active = true;
     void (async () => {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!active) return;
-      if (!token) {
-        setConnectError("Your session could not be verified. Please refresh this page and try again.");
-        return;
-      }
       try {
         const res = await fetch("/api/auth/desktop/complete", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(
-            codeFlow ? { requestId, code: requestId } : { requestId }
-          ),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(codeFlow ? { requestId, code: requestId } : { requestId }),
         });
         const body = (await res.json().catch(() => null)) as {
           ok?: boolean;
@@ -149,7 +99,8 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
           setConnectError(
             connectionErrorText(
               body?.code,
-              body?.error ?? "We couldn't connect your account right now. Please try again."
+              body?.error ??
+                "We couldn't connect your account right now. Please try again."
             )
           );
         }
@@ -162,40 +113,13 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
     return () => {
       active = false;
     };
-  }, [supabase, missingId, requestId, codeFlow, user?.id, router]);
+  }, [missingId, requestId, codeFlow, account?.id, router]);
 
-  const handleGoogle = async () => {
-    if (!supabase) return;
+  const handleGoogle = () => {
+    if (!configured) return;
     setSubmitting(true);
     setUrlError(null);
-    try {
-      const target = codeFlow
-        ? `/auth/desktop?desktop_code=${encodeURIComponent(requestId ?? "")}`
-        : requestId
-          ? `/auth/desktop?request_id=${encodeURIComponent(requestId)}`
-          : "/auth/desktop";
-      const redirectTo = authRedirectTo(target);
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        // `select_account` lets the user pick the Google account to link even
-        // when the browser already has a signed-in Google session.
-        options: { redirectTo, queryParams: { prompt: "select_account" } },
-      });
-      if (error) {
-        setUrlError(friendlyOAuthError(error));
-        setSubmitting(false);
-        return;
-      }
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setUrlError("Google sign-in didn't return a valid redirect. Please try again.");
-        setSubmitting(false);
-      }
-    } catch {
-      setUrlError("Network error while connecting to Google. Please try again.");
-      setSubmitting(false);
-    }
+    startGoogleFlow(window.location.pathname + window.location.search);
   };
 
   let view: "unconfigured" | "missing" | "invalid" | "preparing" | "signin" | "connecting" | "done" | "error";
@@ -205,7 +129,7 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
   else if (loading) view = "preparing";
   else if (connectDone) view = "done";
   else if (connectError) view = "error";
-  else if (user) view = "connecting";
+  else if (account) view = "connecting";
   else view = "signin";
 
   const motionProps = reduce
@@ -237,11 +161,9 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
             <motion.div key={view} {...motionProps} transition={{ duration: 0.2 }}>
               {view === "unconfigured" && (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-                  Authentication isn&apos;t configured for this deployment yet. The
-                  operator needs to set up Supabase ({" "}
-                  <code className="font-mono text-xs text-[var(--accent)]">NEXT_PUBLIC_SUPABASE_URL</code>{" "}
-                  and{" "}
-                  <code className="font-mono text-xs text-[var(--accent)]">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>)
+                  Authentication isn&apos;t configured for this deployment yet.
+                  The operator needs to set{" "}
+                  <code className="font-mono text-xs text-[var(--accent)]">NEXT_PUBLIC_BRICKY_API_URL</code>{" "}
                   before desktop sign-in can be enabled.
                 </div>
               )}
@@ -327,9 +249,9 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
                   </button>
 
                   <p className="mt-6 text-xs leading-relaxed text-[var(--text-muted)]">
-                    Authentication is handled securely by Bricky AI and
-                    Supabase. This window stays open while the app connects your
-                    account — no need to enter a code.
+                    Authentication is handled securely by Bricky AI. This window
+                    stays open while the app connects your account — no need to
+                    enter a code.
                   </p>
 
                   <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs">
@@ -361,10 +283,10 @@ export default function DesktopAuthClient({ requestId, codeFlow }: DesktopAuthCl
                   <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
                     Connecting your account to the Bricky AI desktop app…
                   </p>
-                  {user?.email && (
+                  {account?.email && (
                     <p className="mt-3 text-xs text-[var(--text-muted)]">
                       Signed in as{" "}
-                      <span className="font-medium text-[var(--text-secondary)]">{user.email}</span>
+                      <span className="font-medium text-[var(--text-secondary)]">{account.email}</span>
                     </p>
                   )}
                   <button

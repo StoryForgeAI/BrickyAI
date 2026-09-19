@@ -7,6 +7,14 @@ import { ChevronDown } from "@/components/icons";
 
 const FAQS = [
   {
+    q: "Is this system actually charging money?",
+    a: "No. Subscriptions on this site are currently a temporary test system — nothing is charged and there is no online checkout yet. Activating a plan only records a test subscription so the weekly credits flow can be validated.",
+  },
+  {
+    q: "How do weekly credits work?",
+    a: "Basic adds 250 credits every week. Pro adds 500 credits each week and 750 on the final week of each billing period. Grants are added to your balance and never reset.",
+  },
+  {
     q: "Do I need an AI provider?",
     a: "Yes. Bricky AI's AI-powered features require a supported AI provider configuration. The provider and its usage costs are separate from your Bricky AI subscription.",
   },
@@ -28,7 +36,7 @@ const FAQS = [
   },
   {
     q: "Can I cancel?",
-    a: "Yes. You can manage or cancel your subscription through the available billing management interface. Cancellation and refund rights are subject to the applicable terms and mandatory consumer protection laws.",
+    a: "Yes. You can cancel from the account dashboard at any time; access continues until the end of the current billing period, then the subscription ends. Cancellation and refund rights are subject to the applicable terms and mandatory consumer protection laws.",
   },
 ];
 

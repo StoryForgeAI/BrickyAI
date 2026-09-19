@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ScrollReveal from "@/components/ScrollReveal";
 import PricingCards from "@/components/pricing/PricingCards";
 import PricingFaq from "@/components/pricing/PricingFaq";
-import { ArrowRight, Check, Cpu, Layers, Plug, Sparkles } from "@/components/icons";
+import { ArrowRight, Check, Cpu, Layers, Plug, Shield, Sparkles } from "@/components/icons";
 import { COMPARISON_COLUMNS, COMPARISON_ROWS, type CellValue } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ const PROVIDER_STEPS = [
     icon: Layers,
     step: "1",
     title: "Choose a Bricky AI plan",
-    body: "Pick Free, Starter, Pro, or Max. Every plan needs a supported AI provider for AI-powered features.",
+    body: "Pick Free, Basic, or Pro. Every plan needs a supported AI provider for AI-powered features.",
   },
   {
     icon: Plug,
@@ -69,6 +69,10 @@ export default function PricingPage() {
               configuration, provider usage may be billed separately by the
               provider.
             </p>
+            <div className="mx-auto mt-6 inline-flex max-w-xl items-center gap-2 rounded-full border border-[var(--accent-border)] bg-[var(--accent-dim)] px-4 py-2 text-xs font-medium text-[var(--accent)]">
+              <Shield className="h-3.5 w-3.5" />
+              Temporary test system — activating a plan never charges money.
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -223,11 +227,10 @@ export default function PricingPage() {
                     >
                       <td className="px-6 py-4 text-sm text-[var(--text-primary)]">{row.label}</td>
                       <td className="px-6 py-4 text-center">{<Cell value={row.free} />}</td>
-                      <td className="px-6 py-4 text-center">{<Cell value={row.starter} />}</td>
+                      <td className="px-6 py-4 text-center">{<Cell value={row.basic} />}</td>
                       <td className="px-6 py-4 text-center bg-[var(--accent-dim)]">
                         <Cell value={row.pro} />
                       </td>
-                      <td className="px-6 py-4 text-center"><Cell value={row.max} /></td>
                     </tr>
                   ))}
                 </tbody>

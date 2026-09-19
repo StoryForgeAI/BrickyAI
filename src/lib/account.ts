@@ -3,16 +3,14 @@ type DeleteAccountResult =
   | { ok: false; error: string };
 
 /**
- * Requests deletion of the signed-in user's account and associated personal
- * data via the server-side account deletion route. The server validates the
- * access token, so the anon key is never able to delete anything.
+ * Requests deletion of the signed-in user's account via the server-side route.
+ * The HttpOnly session cookie authenticates the request, so the browser never
+ * sends or stores a token. The current backend has no deletion endpoint yet, so
+ * this yields a clean, user-presentable "not available" status until it does.
  */
-export async function deleteAccount(accessToken: string): Promise<DeleteAccountResult> {
+export async function deleteAccount(): Promise<DeleteAccountResult> {
   try {
-    const res = await fetch("/api/account/delete", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const res = await fetch("/api/account/delete", { method: "POST" });
     if (res.ok) return { ok: true };
     let message = "Something went wrong while deleting your account.";
     try {

@@ -41,19 +41,19 @@ interface DownloadCardProps {
 
 function Card({ icon, badge, title, description, meta, fileLabel, note, href, accent, pendingAction }: DownloadCardProps) {
   const reduce = useReducedMotion();
-  const { user, configured, requireAuth } = useAuth();
+  const { account, configured, requireAuth } = useAuth();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // When authentication is configured and the user is signed out, require
     // sign-in before the download starts.
-    if (configured && !user) {
+    if (configured && !account) {
       e.preventDefault();
       e.stopPropagation();
       requireAuth(pendingAction);
     }
   };
 
-  const needsAuth = configured && !user;
+  const needsAuth = configured && !account;
 
   return (
     <motion.article
@@ -100,7 +100,7 @@ function Card({ icon, badge, title, description, meta, fileLabel, note, href, ac
         </div>
 
         <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
-          {needsAuth ? "Sign in with Google to continue." : note}
+          {needsAuth ? "Sign in to continue." : note}
         </p>
       </div>
     </motion.article>

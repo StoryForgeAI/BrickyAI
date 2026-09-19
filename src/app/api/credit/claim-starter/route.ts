@@ -1,128 +1,82 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
-import { isSecretConfigured, getServiceSupabaseClient } from "@/lib/supabase/server";
+import { isBrickyApiConfigured } from "@/lib/config";
+import { brickyServerRequest, cookieFromSetCookies } from "@/lib/bricky-server";
+import { friendlyMessage } from "@/lib/auth-errors";
+import { getSessionToken, clearSessionCookie } from "@/lib/session";
 
 /**
- * Server-side starter-credit claim.
+ * Starter credit claim (BFF proxy for `POST /wp-json/bricky/v1/credit/claim-starter`).
  *
- * Credits are a promotional entitlement granted exactly once per account AND
- * once per browser/device environment. The decision lives on the server:
+ * The decision stays on the WordPress backend (one claim per account AND per
+ * browser, via its own `bricky_device_id` cookie). This route:
  *
- * - The caller is validated with the Bearer access token.
- * - A persistent `bricky_device_id` cookie (HttpOnly, opaque random UUID)
- *   identifies the browser/device environment. It is never readable by
- *   JavaScript, contains no personal data, and survives logout.
- * - The server-only Postgres function `claim_starter_credits(browser_id,
- *   user_id)` atomically records the claim (unique on browser and user) and
- *   grants 80 credits only when the account has never received a balance.
+ * - authenticates with the HttpOnly session token,
+ * - forwards the browser's cookies so WordPress sees the device cookie,
+ * - passes WordPress's `bricky_device_id` `Set-Cookie` back to the browser so
+ *   the per-browser entitlement keeps working in local development.
  *
- * The browser only ever reads `profiles.credits`; it can never set it.
- * See `docs/CREDITS_SETUP.md` for the database setup.
+ * The browser never decides or writes a balance.
  */
 
 const DEVICE_COOKIE = "bricky_device_id";
-const DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 400; // ~400 days
-const STARTER_CREDITS = 80;
-
-function getBrowserId(request: Request): { value: string; shouldSet: boolean } {
-  const header = request.headers.get("cookie");
-  if (header) {
-    for (const part of header.split(";")) {
-      const [rawName, ...rawValue] = part.trim().split("=");
-      const name = decodeURIComponent(rawName ?? "");
-      if (name === DEVICE_COOKIE) {
-        const value = rawValue.join("=");
-        if (value) return { value: decodeURIComponent(value), shouldSet: false };
-      }
-    }
-  }
-  return { value: randomUUID(), shouldSet: true };
-}
 
 export async function POST(request: Request) {
-  if (!isSecretConfigured) {
-    return NextResponse.json(
-      { error: "Starter credits aren't configured for this deployment yet." },
-      { status: 501 }
-    );
+  if (!isBrickyApiConfigured) {
+    return NextResponse.json({
+      ok: true,
+      granted: false,
+      credits: null,
+    });
   }
 
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  const token = await getSessionToken();
   if (!token) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+    return NextResponse.json({ ok: true, granted: false, credits: null });
   }
 
-  const admin = getServiceSupabaseClient();
+  const browserCookie = request.headers.get("cookie") ?? undefined;
 
-  const { data: authData, error: userError } = await admin.auth.getUser(token);
-  if (userError || !authData.user) {
-    return NextResponse.json(
-      { error: "Session is invalid or has expired. Please sign in again." },
-      { status: 401 }
-    );
-  }
-
-  const userId = authData.user.id;
-
-  // Ensure a `profiles` row exists. Idempotent: only id/email/updated_at are
-  // written, so an existing balance is never touched here.
-  const { error: upsertError } = await admin
-    .from("profiles")
-    .upsert(
-      { id: userId, email: authData.user.email, updated_at: new Date().toISOString() },
-      { onConflict: "id" }
-    );
-  if (upsertError) {
-    return NextResponse.json(
-      { error: "We couldn't process your request right now. Please try again later." },
-      { status: 500 }
-    );
-  }
-
-  const { value: browserId, shouldSet } = getBrowserId(request);
-
-  let granted = false;
-  const { data, error } = await admin.rpc("claim_starter_credits", {
-    p_browser_id: browserId,
-    p_user_id: userId,
+  const res = await brickyServerRequest("/credit/claim-starter", {
+    method: "POST",
+    token,
+    cookiesToForward: browserCookie,
   });
-
-  if (error && error.code === "23505") {
-    // Unique-violation: this browser or account has already claimed. Not an
-    // error — the entitlement was already consumed.
-    granted = false;
-  } else if (error) {
-    return NextResponse.json(
-      { error: "We couldn't process your request right now. Please try again later." },
-      { status: 500 }
-    );
-  } else {
-    granted = (data?.[0]?.granted ?? false) as boolean;
-  }
-
-  // Read the current balance back so the client never computes it.
-  const { data: profile } = await admin
-    .from("profiles")
-    .select<"credits", { credits: number | null }>("credits")
-    .eq("id", userId)
-    .maybeSingle();
 
   const response = NextResponse.json({
-    granted,
-    credits: profile?.credits ?? null,
-    starter_credits: STARTER_CREDITS,
+    ok: true,
+    granted: res.status === 200 && Boolean(res.body?.success),
+    credits: typeof res.body?.credits === "number" ? res.body.credits : null,
   });
 
-  if (shouldSet) {
-    response.cookies.set({
-      name: DEVICE_COOKIE,
-      value: browserId,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: DEVICE_COOKIE_MAX_AGE,
+  // Persist the backend's device cookie so future claims on this browser are
+  // recognized without a duplicate entitlement.
+  if (res.status === 200) {
+    const deviceId = cookieFromSetCookies(res.setCookies, DEVICE_COOKIE);
+    if (deviceId) {
+      response.cookies.set({
+        name: DEVICE_COOKIE,
+        value: deviceId,
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 400,
+      });
+    }
+  }
+
+  if (res.status === 401 || res.status === 403) {
+    await clearSessionCookie();
+  }
+
+  if (res.status !== 200 && res.status !== 409) {
+    // Transport/server failure only — allow a retry, but never surface a hard
+    // error for an entitlement that the browser can simply re-request later.
+    return NextResponse.json({
+      ok: false,
+      granted: false,
+      credits: null,
+      error: friendlyMessage(res.status, res.body),
     });
   }
 

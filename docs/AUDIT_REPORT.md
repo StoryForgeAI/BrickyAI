@@ -3,6 +3,13 @@
 Date: September 16, 2026
 Audited codebase: `D:\BrickyAI_WEB` (Next.js 16.3.3, Turbopack)
 
+> **Note (September 19, 2026):** the authentication/account/credits/subscription
+> stack described in this report as Supabase has since been migrated to the
+> WordPress `bricky/v1` backend behind a Next.js BFF. Read
+> `docs/WORDPRESS_AUTH_SETUP.md` for the current architecture and
+> `docs/MIGRATION_REPORT.md` for the change set. Supabase references below are
+> historical.
+
 This report documents what the website actually does with data, the changes made so
 that the legal documents and UI match that reality, and the items that still require
 operator or legal input. It deliberately does **not** claim the website is "100%

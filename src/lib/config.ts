@@ -21,6 +21,22 @@ export const siteConfig = {
 export const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL ?? siteConfig.url;
 
 /**
+ * WordPress backend base URL — the single source of truth for authentication,
+ * account, credits and subscription data.
+ *
+ * Expected value examples:
+ *   local:  http://localhost/wordpress
+ *   prod:   https://api.brickyai.com
+ *
+ * The site degrades gracefully (sign-in UI hidden, downloads open directly)
+ * while this is unset — the same behaviour the old Supabase auth had.
+ */
+export const BRICKY_API_URL = (process.env.NEXT_PUBLIC_BRICKY_API_URL ?? "").trim();
+
+/** True when a WordPress backend is configured for this deployment. */
+export const isBrickyApiConfigured = BRICKY_API_URL !== "";
+
+/**
  * Centralized download configuration.
  *
  * Defaults are placeholders ("#") on purpose — the actual installer and plugin

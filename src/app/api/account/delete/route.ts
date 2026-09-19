@@ -1,52 +1,49 @@
 import { NextResponse } from "next/server";
-import { isSecretConfigured, getServiceSupabaseClient } from "@/lib/supabase/server";
+import { isBrickyApiConfigured } from "@/lib/config";
+import { brickyServerRequest } from "@/lib/bricky-server";
+import { friendlyMessage } from "@/lib/auth-errors";
+import { getSessionToken, clearSessionCookie } from "@/lib/session";
 
 /**
- * Server-side account deletion.
+ * Account deletion (BFF proxy).
  *
- * Client code holds only the public publishable key, which can never delete
- * accounts. This route validates the caller's access token and then deletes
- * the account using the server-only `SUPABASE_SECRET_KEY` — an administrative
- * key that is only ever read on the server and never reaches the browser.
- *
- * Related personal data stored in application tables is covered by the same
- * deletion where the schema uses foreign keys with cascade deletes, or by
- * application-level cleanup hooks where those exist. Certain records (for
- * example, transactional or accounting records) may need to be retained where
- * legally required.
+ * The current WordPress plugin has NO account-deletion route (verified against
+ * the live registry: `GET /wp-json/bricky/v1`). This route forwards to the
+ * planned `POST /wp-json/bricky/v1/account/delete`; while that endpoint is
+ * missing the caller receives a clean, honest error instead of a silent no-op.
+ * Required backend change: expose the delete endpoint (see final report).
  */
 
-export async function POST(request: Request) {
-  if (!isSecretConfigured) {
+export async function POST() {
+  if (!isBrickyApiConfigured) {
+    return NextResponse.json({ ok: false, error: "Account deletion isn't available yet." }, { status: 501 });
+  }
+
+  const token = await getSessionToken();
+  if (!token) {
+    return NextResponse.json({ ok: false, error: "Please sign in." }, { status: 401 });
+  }
+
+  const res = await brickyServerRequest("/account/delete", { method: "POST", token });
+
+  if (res.status === 200) {
+    await clearSessionCookie();
+    return NextResponse.json({ ok: true });
+  }
+
+  if (res.status === 404) {
     return NextResponse.json(
-      { error: "Account deletion isn't configured for this deployment yet." },
+      {
+        ok: false,
+        error:
+          "Account deletion isn't available through the Bricky AI backend yet. Please contact support if you'd like to delete your account.",
+      },
       { status: 501 }
     );
   }
 
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
-  if (!token) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
-
-  const admin = getServiceSupabaseClient();
-
-  const { data, error: userError } = await admin.auth.getUser(token);
-  if (userError || !data.user) {
-    return NextResponse.json(
-      { error: "Session is invalid or has expired. Please sign in again." },
-      { status: 401 }
-    );
-  }
-
-  const { error: deleteError } = await admin.auth.admin.deleteUser(data.user.id);
-  if (deleteError) {
-    return NextResponse.json(
-      { error: "We couldn't delete your account right now. Please try again later." },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(
+    { ok: false, error: friendlyMessage(res.status, res.body) },
+    { status: res.status === 0 ? 502 : res.status }
+  );
 }

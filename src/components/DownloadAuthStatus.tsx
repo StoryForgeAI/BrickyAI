@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
  * first client render always match (no hydration mismatch).
  */
 export default function DownloadAuthStatus() {
-  const { user, loading, configured } = useAuth();
+  const { account, loading, configured } = useAuth();
 
   if (loading || !configured) {
     return (
@@ -21,12 +21,12 @@ export default function DownloadAuthStatus() {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span
-        className={`h-1.5 w-1.5 rounded-full ${user ? "bg-[var(--success)]" : "bg-[var(--text-muted)]"}`}
+        className={`h-1.5 w-1.5 rounded-full ${account ? "bg-[var(--success)]" : "bg-[var(--text-muted)]"}`}
       />
-      {user ? (
+      {account ? (
         <>You&apos;re signed in — choose a download below.</>
       ) : (
-        <>Sign in with Google to start your download.</>
+        <>Sign in to start your download.</>
       )}
     </span>
   );

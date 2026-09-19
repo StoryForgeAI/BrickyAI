@@ -19,11 +19,11 @@ export default function DownloadCard({
   meta = "Windows 10 / 11",
 }: DownloadCardProps) {
   const reduce = useReducedMotion();
-  const { user, configured, requireAuth } = useAuth();
-  const needsAuth = configured && !user;
+  const { account, configured, requireAuth } = useAuth();
+  const needsAuth = configured && !account;
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (configured && !user) {
+    if (configured && !account) {
       e.preventDefault();
       e.stopPropagation();
       requireAuth({ type: "download-windows" });

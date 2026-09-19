@@ -25,7 +25,7 @@ function shortEmail(email: string) {
 }
 
 function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
-  const { user, session, loading, signOut, configured, requireAuth, profile } = useAuth();
+  const { account, loading, signOut, configured } = useAuth();
   const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -60,26 +60,23 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
     );
   }
 
-  if (!user) {
+  if (!account) {
     return (
-      <button
-        type="button"
-        onClick={() => {
-          requireAuth({ type: "navigate-download" });
-          onNavigate();
-        }}
+      <Link
+        href="/login"
+        onClick={onNavigate}
         className="inline-flex h-10 items-center rounded-full border border-[var(--border-strong)] px-5 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
       >
         Log in
-      </button>
+      </Link>
     );
   }
 
   const handleDelete = async () => {
-    if (!configured || !session) return;
+    if (!configured || !account) return;
     setDeleting(true);
     setDeleteError(null);
-    const result = await deleteAccount(session.access_token);
+    const result = await deleteAccount();
     setDeleting(false);
     if (result.ok) {
       setOpen(false);
@@ -98,7 +95,7 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
         className="inline-flex h-10 max-w-[220px] items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-raised)] px-3 text-sm text-[var(--text-primary)] transition-colors hover:border-[var(--accent-border)]"
       >
         <User className="h-4 w-4 text-[var(--accent)]" />
-        <span className="truncate">{shortEmail(user.email ?? "Account")}</span>
+        <span className="truncate">{shortEmail(account.email ?? "Account")}</span>
       </button>
 
       <AnimatePresence>
@@ -112,12 +109,10 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
           >
             <div className="border-b border-[var(--border-subtle)] px-4 py-3">
               <p className="truncate text-sm font-medium text-[var(--text-primary)]">
-                {user.email}
+                {account.email}
               </p>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                {(profile?.email_verified ?? false) || user.email_confirmed_at
-                  ? "Email verified via Google"
-                  : "Connected with Google"}
+                {account.email_verified ? "Email verified" : "Email not verified yet"}
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-[var(--surface)] px-3 py-2">
@@ -125,7 +120,7 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
                     Subscription
                   </p>
                   <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-primary)]">
-                    {subscriptionLabel(profile)}
+                    {subscriptionLabel(account)}
                   </p>
                 </div>
                 <div className="rounded-lg bg-[var(--surface)] px-3 py-2">
@@ -133,7 +128,7 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
                     Credits
                   </p>
                   <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-primary)]">
-                    {creditsLabel(profile)}
+                    {creditsLabel(account)}
                   </p>
                 </div>
               </div>
@@ -143,6 +138,14 @@ function AccountMenu({ onNavigate }: { onNavigate: () => void }) {
               <p className="px-3 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
                 Account
               </p>
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-hover)]"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                Dashboard
+              </Link>
               {confirmingDelete ? (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
                   <p className="text-xs leading-relaxed text-red-300">
